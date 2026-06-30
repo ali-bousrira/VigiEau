@@ -270,6 +270,59 @@ class TestClientIngestion:
         assert r.status_code == 400
 
 
+class TestPredictAutonome:
+
+    def test_predict_mesures_brutes(self, http, client_header):
+        r = http.post("/predict", json=VALID_MESURES, headers=client_header)
+        assert r.status_code == 200
+        d = r.get_json()
+        assert d["potable"] in (0, 1)
+        assert d["label"] in ("Potable", "Non potable")
+        assert 0.0 <= d["probability"] <= 1.0
+        assert "model_version" in d
+        assert "mesures" in d
+
+    def test_predict_par_prelevement_id(self, http, client_header):
+        r_ingest = http.post("/ingest/manual", json=VALID_MESURES, headers=client_header)
+        prev_id  = r_ingest.get_json()["prelevement_id"]
+
+        r = http.post("/predict", json={"prelevement_id": prev_id}, headers=client_header)
+        assert r.status_code == 200
+        assert r.get_json()["potable"] in (0, 1)
+
+    def test_predict_id_inexistant(self, http, client_header):
+        r = http.post("/predict",
+                      json={"prelevement_id": "00000000-0000-0000-0000-000000000000"},
+                      headers=client_header)
+        assert r.status_code == 404
+
+    def test_predict_id_autre_client_refuse(self, http):
+        db = SessionLocal()
+        from api.models.db import Client as C
+        import secrets as s
+        c2 = C(id_client="PRED-OTHER", denomination="Autre", adresse="X", actif=True)
+        c2.set_api_key(s.token_urlsafe(16))
+        db.add(c2); db.commit(); db.close()
+
+        r = http.post("/predict",
+                      json={"prelevement_id": "00000000-0000-0000-0000-000000000000"},
+                      headers={"X-API-Key": s.token_urlsafe(16)})
+        assert r.status_code == 401
+
+    def test_predict_feature_manquante(self, http, client_header):
+        bad = {k: v for k, v in VALID_MESURES.items() if k != "ph"}
+        assert http.post("/predict", json=bad, headers=client_header).status_code == 400
+
+    def test_predict_sans_cle(self, http):
+        assert http.post("/predict", json=VALID_MESURES).status_code == 401
+
+    def test_predict_ne_cree_pas_de_prelevement(self, http, client_header):
+        r_before = http.get("/me/prelevements", headers=client_header).get_json()["total"]
+        http.post("/predict", json=VALID_MESURES, headers=client_header)
+        r_after  = http.get("/me/prelevements", headers=client_header).get_json()["total"]
+        assert r_after == r_before
+
+
 class TestClientConsultation:
 
     def test_mes_prelevements(self, http, client_header):

@@ -1,0 +1,48 @@
+================================================================================
+        LABORATOIRE AQUATEST PROVENCE — RAPPORT D'ANALYSE D'EAU
+================================================================================
+
+Référence dossier : LAB-2025-0342
+Date de prélèvement : 2025-03-18
+Date d'analyse     : 2025-03-20
+ID Client          : CLIENT-001
+Lieu de prélèvement: Station de pompage Nord — Puits forage P-04
+
+--------------------------------------------------------------------------------
+PARAMÈTRES PHYSICO-CHIMIQUES
+--------------------------------------------------------------------------------
+
+Paramètre              Valeur      Unité       Méthode
+--------------------------------------------------------------
+pH                      7,60       sans unité  NF EN ISO 10523
+Dureté (Hardness)     182,30       mg/L CaCO3  NF T 90-016
+Résidu sec (Solids)  18 450,00     mg/L        NF EN 872
+Chloramines             8,10       mg/L        NF EN ISO 7393-2
+Sulfates (Sulfate)    310,00       mg/L SO4    NF EN ISO 10304-1
+Conductivité (Cond.)  415,00       µS/cm       NF EN 27888
+Carbone organique      14,20       mg/L COT    NF EN 1484
+  (Organic_carbon)
+Trihalométhanes        66,40       µg/L        NF EN ISO 10301
+  (Trihalomethanes)
+Turbidité              3,80        NTU         NF EN ISO 7027
+
+--------------------------------------------------------------------------------
+OBSERVATIONS
+--------------------------------------------------------------------------------
+
+Eau claire, prélèvement effectué en conditions normales (7h30).
+Aucune anomalie visuelle constatée. Température de l'eau : 14,2 °C.
+Échantillon conservé à 4 °C, analysé sous 24 h.
+
+--------------------------------------------------------------------------------
+INTERPRÉTATION (à titre indicatif — non contractuelle)
+--------------------------------------------------------------------------------
+
+Les valeurs mesurées sont globalement conformes aux limites de qualité
+fixées par le Code de la Santé Publique (arrêté du 11 janvier 2007).
+La dureté élevée (eau calcaire) est sans incidence sur la potabilité.
+
+--------------------------------------------------------------------------------
+Analyste : M. [ANONYMISÉ]          Visa :  [ANONYMISÉ]
+Laboratoire agréé — Accréditation COFRAC n° 1-XXXX
+================================================================================

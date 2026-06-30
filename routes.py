@@ -566,6 +566,63 @@ def ingest_ocr_and_predict():
 
 
 # ════════════════════════════════════════════════════════════════════════════
+# PRÉDICTION AUTONOME
+# Prédit sans créer de prélèvement — deux modes d'entrée :
+#   1. Mesures brutes JSON  : { "ph": 7.2, "Hardness": 198.0, … }
+#   2. ID de prélèvement    : { "prelevement_id": "<uuid>" }
+# Authentification : X-API-Key (client)
+# ════════════════════════════════════════════════════════════════════════════
+
+@bp.route("/predict", methods=["POST"])
+@require_client_key
+@timed
+def predict():
+    """
+    Prédiction autonome — ne crée pas de prélèvement en base.
+
+    Mode 1 — mesures brutes :
+      { "ph": 7.2, "Hardness": 198.0, "Solids": 18630.0,
+        "Chloramines": 7.1, "Sulfate": 333.0, "Conductivity": 432.0,
+        "Organic_carbon": 14.2, "Trihalomethanes": 62.8, "Turbidity": 4.0 }
+
+    Mode 2 — ID d'un prélèvement existant (appartenant au client) :
+      { "prelevement_id": "550e8400-e29b-41d4-a716-446655440000" }
+
+    Retourne : potable, label, probability, model_version, mesures utilisées.
+    """
+    data = request.get_json(force=True) or {}
+
+    if "prelevement_id" in data:
+        prev = g.db.query(Prelevement).filter(
+            Prelevement.id == data["prelevement_id"]
+        ).first()
+        if not prev:
+            return jsonify({"error": "Prélèvement introuvable."}), 404
+        if prev.client_id != g.client.id:
+            return jsonify({"error": "Accès refusé."}), 403
+        if not prev.mesures:
+            return jsonify({"error": "Ce prélèvement n'a pas de mesures associées."}), 422
+        mesures = prev.mesures.to_feature_dict()
+    else:
+        mesures = data
+
+    try:
+        result = run_prediction(mesures)
+    except ValueError as e:
+        log_audit("client_predict", status_code=400, detail=str(e))
+        return jsonify({"error": str(e)}), 400
+
+    log_audit("client_predict", status_code=200)
+    return jsonify({
+        "potable":       result["potable"],
+        "label":         result["label"],
+        "probability":   result["probability"],
+        "model_version": result["model_version"],
+        "mesures":       mesures,
+    })
+
+
+# ════════════════════════════════════════════════════════════════════════════
 # ADMIN — gestion des comptes clients
 # Accessible à TOUS les experts (analyste ET exploit)
 # Authentification : Authorization: Bearer <token>

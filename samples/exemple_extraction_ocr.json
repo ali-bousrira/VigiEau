@@ -1,0 +1,19 @@
+{
+  "_description": "Résultat attendu après traitement de fiche_labo_anonymisee.txt par POST /ingest/ocr-and-predict",
+  "date_prelevement": "2025-03-18",
+  "id_client": "CLIENT-001",
+  "lieu": "Station de pompage Nord — Puits forage P-04",
+  "mesures": {
+    "ph": 7.6,
+    "Hardness": 182.3,
+    "Solids": 18450.0,
+    "Chloramines": 8.1,
+    "Sulfate": 310.0,
+    "Conductivity": 415.0,
+    "Organic_carbon": 14.2,
+    "Trihalomethanes": 66.4,
+    "Turbidity": 3.8
+  },
+  "observations": "Eau claire, prélèvement effectué en conditions normales (7h30). Aucune anomalie visuelle constatée.",
+  "warnings": []
+}
