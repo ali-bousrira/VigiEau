@@ -229,7 +229,7 @@ class TestE2EPipelineOcrPredict:
             return_value=ocr_partiel,
         ):
             r = http.post(
-                "/ingest/ocr",
+                "/ingest/ocr-and-predict",
                 data={"file": (self._fake_pdf(), "fiche_labo.pdf", "application/pdf")},
                 content_type="multipart/form-data",
                 headers=client_header,

@@ -1,0 +1,581 @@
+ 
+Waterflow 2  
+ 
+« Tous les modèles sont faux, mais certains sont utiles. » – George E. P. Box 
+ 
+ 
+Contexte pédagogique
+ 
+Le projet Waterflow 2 s’inscrit dans la continuité du projet Waterflow, où les 
+étudiant·es ont entraîné et déployé un modèle de classification de la 
+potabilité de l’eau en s’appuyant sur MLflow, une API Flask et une batterie de 
+tests avec PyTest.  
+Il s’agit désormais de passer d’un prototype fonctionnel à une application API 
+unique plus proche d’un contexte professionnel : exposer et stocker les 
+données de prélèvements, automatiser les tests et la livraison, intégrer un 
+service d’OCR, et mettre en place un monitoring simple adapté à un contexte 
+MLOps. 
+ 
+ 
+ 
+ 
+_1 
+ 
+Rappel du projet Waterflow 
+ 
+Dans Waterflow, vous avez : 
+●​ Réalisé une veille sur les pratiques MLOps et sur l’outil MLflow. 
+●​ Préparé les données de qualité de l’eau,  
+●​ Entraîné un modèle de classification (classique ou réseau de 
+neurones), 
+●​ Évalué ses performances.​ 
+●​ Mis en place un serveur MLflow,  
+●​ Suivi les expériences d'entraînement,  
+●​ Déployé le modèle dans une API Flask  
+●​ Implémenté des tests (unitaires, fonctionnels, non‑régression) avec 
+PyTest,  
+●​ géré le projet de manière collaborative avec un dépôt GitHub structuré 
+(notebook, experiment.py, app.py, environnement de tests, README).​ 
+ 
+Waterflow 2 reprend ce socle pour le prolonger vers la mise à disposition des 
+données, la livraison continue et le monitoring, ainsi que la mise en œuvre 
+d’une sécurisation by design des données personnelles conforme au RGPD. 
+ 
+Dans Waterflow 2, vous ne redéveloppez pas un micro‑système complet de 
+services indépendants, mais vous enrichissez votre projet existant avec une 
+API structurée en modules (données, prédiction, OCR) partageant une même 
+base de code et une même base de données. 
+_2 
+ 
+Mise en situation professionnelle 
+ 
+Votre équipe a déjà livré une première version de l’outil “Drink Safe” : une API 
+de prédiction permettant de classifier la qualité de l’eau à partir de mesures 
+physico‑chimiques, avec suivi d’expériences sous MLflow comme réalisé dans 
+le projet Waterflow.  
+Quelques mois après ce premier déploiement, l’entreprise vous demande de 
+renforcer l’industrialisation du service :  
+●​ Les clients de la collectivité territoriale veulent pouvoir déposer leurs 
+prélèvements et récupérer leurs résultats via une API simple, sécurisée 
+par une clé API plutôt que par un système d’authentification complexe. 
+●​ Les clients ou agents de terrain de la collectivité territoriale souhaitent 
+éviter de saisir manuellement les fiches de laboratoire : ils veulent 
+pouvoir déposer une photo ou un PDF de rapport de prélèvement, 
+l’envoyer 
+par 
+API, 
+et 
+laisser 
+un 
+service 
+d’IA 
+OCR 
+extraire 
+automatiquement les informations attendues (date, ID client, mesures 
+physico‑chimiques, observations). 
+●​ Les analystes qualité veulent disposer d’une plateforme unique pour 
+consulter tous les prélèvements, les prédictions du modèle, les tableaux 
+de bord. 
+●​ Le responsable d’exploitation veut disposer d’une plateforme unique 
+pour consulter les indicateurs de santé du système (erreurs, temps de 
+réponse, volume de requêtes, etc.). 
+Vous implémenterez un socle commun simplifié couvrant les besoins des 
+clients finaux et des analystes qualité; les fonctionnalités avancées de 
+supervision du responsable d’exploitation sont indiquées comme options à 
+développer si le temps le permet. 
+_3 
+ 
+Votre mission est de concevoir et développer Waterflow 2, une plateforme 
+MLOps industrialisée connectant : 
+●​ une API principale structurée offrant des routes de données, de 
+prédiction et d’ingestion OCR 
+○​ une API de données multi-profils ; 
+○​ une API de prédiction basée sur le modèle Waterflow ; 
+○​ une API d’ingestion connectée à OCR.space (après veille 
+comparative de solutions équivalentes) pour transformer des 
+fiches PDF/images en données structurées ; 
+●​ une base de données relationnelle conforme au RGPD ; 
+●​ une interface web simple pour les experts ; 
+●​ un mécanisme de logs et quelques métriques exposées pour le 
+monitoring. 
+●​ [optionnel] une interface frontend de monitoring 
+Vous veillerez à ce que l’application soit conteneurisée, déployable avec des 
+tests automatisés et une CI/CD minimale. 
+ 
+Profils utilisateur et authentification simplifiée 
+Modèle d’authentification 
+Pour simplifier le projet, l’authentification se fait exclusivement par clé API côté 
+clients : 
+●​ Chaque client de la collectivité possède un compte client contenant : 
+●​ un identifiant client (ID client), 
+●​ une dénomination (nom de la structure), 
+●​ une adresse postale, 
+●​ une clé API générée par la plateforme. 
+_4 
+ 
+●​ Les administrateurs de la plateforme (analystes qualité / responsable 
+d’exploitation ou rôle dédié) sont les seuls à pouvoir : 
+●​ créer un compte client avec ID, nom et adresse ; 
+●​ générer et régénérer une clé API associée. 
+●​ Les clients utilisent uniquement leur clé API pour : 
+●​ appeler l’API d’ingestion de prélèvements, 
+●​ appeler l’API d’ingestion par OCR (fiches labo), 
+●​ consulter leurs données  
+●​ consulter les résultats d’analyse du modèle de la plateforme. 
+ 
+Les accès experts (analystes, responsable d’exploitation) peuvent rester dans 
+un modèle simple (par exemple un login technique unique configuré côté 
+serveur, ou une “auth” très légère) : le cœur du projet se concentre sur la 
+sécurité et la séparation des périmètres via clé API client + rôles serveur plutôt 
+que sur un système d’authentification complet. Une gestion détaillée des 
+droits par utilisateur expert n’est pas attendue 
+Profils à prendre en compte 
+●​ Client final de la collectivité 
+●​ Possède un ID client et une clé API. 
+●​ Peut déposer des prélèvements (données structurées ou fiche 
+labo PDF/image) et consulter ses propres données et résultats via 
+API et/ou une vue simplifiée.  
+●​ Analyste qualité 
+●​ Accède à tous les prélèvements, dashboards, prédictions, 
+données enrichies. 
+●​ Suit la cohérence des données et les performances du modèle. 
+_5 
+ 
+●​ Responsable d’exploitation 
+●​ Supervise la santé globale de la plateforme : disponibilité, 
+volumes, erreurs, alertes. 
+●​ Suit la gestion des clés API, les journaux d’accès et les incidents 
+techniques. 
+User stories principales 
+Côté client final (ID client + clé API) 
+●​ En tant que client final, je veux qu’un administrateur crée un compte 
+client avec mon ID, ma dénomination et mon adresse, afin de disposer 
+d’une clé API pour accéder au service. 
+●​ En tant que client final, je veux soumettre un prélèvement via une route 
+API 
+sécurisée 
+par 
+ma 
+clé 
+API, 
+en 
+envoyant 
+les 
+mesures 
+physico‑chimiques attendues par le modèle, afin d’obtenir une 
+prédiction de potabilité. 
+●​ En tant que client final, je veux consulter la liste et le détail de mes 
+prélèvements (et uniquement les miens) via API, afin de suivre mes 
+analyses et historiser mes résultats. 
+●​ En tant que client final, je veux soumettre une fiche de laboratoire 
+(photo / PDF) à une route API dédiée, toujours en utilisant ma clé API, 
+afin que la plateforme en extraie automatiquement les données et crée 
+un prélèvement structuré. 
+●​ [option] En tant que client final, je veux connaître les données 
+personnelles associées à mon compte (ID, adresse, historique d’accès) 
+et les règles de conservation, afin d’être informé et de voir que la 
+plateforme respecte le RGPD. 
+ 
+_6 
+ 
+Côté analyste qualité 
+●​ En tant qu’analyste qualité, je veux accéder à un dashboard regroupant 
+tous les prélèvements, la provenance (saisie directe ou OCR), les 
+prédictions de potabilité, ainsi que les métriques du modèle (accuracy, 
+recall, etc.). 
+●​ [option] En tant qu’analyste qualité, je veux pouvoir filtrer les 
+prélèvements par client, zone, date, provenance (OCR ou saisie 
+manuelle), afin de mener des analyses ciblées ou des contrôles qualité. 
+●​ [option] En tant qu’analyste qualité, je veux pouvoir rejouer une 
+prédiction sur un prélèvement et comparer les versions du modèle 
+enregistrées sous MLflow, afin de vérifier l’impact des nouvelles versions 
+sur les dossiers sensibles. 
+Côté responsable d’exploitation 
+●​ En tant que responsable d’exploitation, je souhaite un aperçu simple (et 
+en option je veux visualiser un dashboard d’exploitation)  
+des 
+indicateurs suivants : nombre de requêtes par API (data, prédiction, 
+OCR), nombre d’erreurs, temps de réponse, incidents, afin de surveiller 
+la santé de la plateforme. 
+●​ En tant que responsable d’exploitation, je veux pouvoir  
+○​ gérer les clients (création, désactivation, régénération de clés 
+API) et  
+○​ consulter un journal simple des accès par clé API (date, endpoint, 
+code de retour), stocké dans la base ou dans des logs structurés., 
+afin de garantir la traçabilité des usages. 
+●​ [option] En tant que responsable d’exploitation, je veux documenter et 
+suivre la résolution d’incidents techniques (erreurs d’API, problèmes 
+_7 
+ 
+d’OCR, dérive des données), afin de garantir le maintien en condition 
+opérationnelle. 
+ 
+Exemple de fiche labo contenant les résultats d’analyse d’un client 
+Travail demandé 
+ 
+Les étudiant·es repartent obligatoirement de leur projet Waterflow : même 
+dépôt GitHub (ou fork), même modèle de base et même architecture 
+générale, qu’il s’agit d’enrichir et de durcir.  
+Vous devez concevoir et implémenter Waterflow 2 en suivant les étapes 
+suivantes : 
+1.​ Analyse du besoin et spécifications  
+●​ Formaliser le contexte métier et les profils utilisateurs. 
+●​ Rédiger les spécifications fonctionnelles (user stories, critères 
+d’acceptation) pour client, agent, analyste, responsable. 
+●​ Proposer une architecture technique : 
+_8 
+ 
+●​ API (une seule API peut porter Data + Model + OCR, plutôt 
+que 3 APIs séparées)  
+●​ API Data (prélèvements), 
+●​ API Model (prédiction Waterflow existante), 
+●​ API OCR (ingestion de fiches labo), 
+●​ base de données, 
+●​ logs de monitoring, 
+●​ mécanismes de test 
+●​ CI/CD, 
+●​ intégration avec OCR.space. 
+2.​ Modélisation et base de données 
+●​ Concevoir un MCD/MPD incluant au minimum : 
+●​ clients (ID client, dénomination, adresse, clé API…), 
+●​ prélèvements (date, lieu, mesures, ID client, provenance : 
+“Saisie” / “OCR”), 
+●​ journaux d’accès et de traitements (pour la traçabilité 
+RGPD), 
+●​ [si nécessaire] éventuelles tables de support (types de 
+mesures, statuts…). 
+●​ Implémenter la base SQL (PostgreSQL / MariaDB…) et les scripts 
+de création. 
+●​ Programmer des scripts d’import/agrégation cohérents avec 
+le modèle. Au moins un script attendu. 
+3.​ API Data et modèle d’authentification par clé API 
+●​ Implémenter une API REST Data exposant au moins : 
+_9 
+ 
+●​ POST /api/clients (réservé aux administrateurs) : création 
+d’un client avec ID, nom, adresse et génération de la clé 
+API. 
+●​ GET /api/clients (admin) : liste ou détail des clients. 
+●​ POST /api/measurements (client + clé API) : dépôt de 
+mesures structurées pour créer un prélèvement. 
+●​ GET /api/measurements (client + clé API) : liste des 
+prélèvements du client (filtrage par clé API). 
+●​ GET /api/measurements/admin (expert) : vue globale 
+filtrable. 
+●​ Gérer la validation des requêtes (schémas, types, formats) et 
+le contrôle d’accès par clé API. 
+●​ Documenter cette API (OpenAPI / Swagger) afin de la rendre 
+intégrable par des systèmes externes. 
+4.​ API Model 
+●​ Réutiliser ou adapter le modèle et l’API de prédiction du projet 
+Waterflow (Flask ou FastAPI) en l’intégrant dans la nouvelle 
+architecture. 
+●​ Exposer une route, par exemple POST /api/predict, prenant en 
+entrée un prélèvement (ou un ID de prélèvement) et renvoyant 
+la prédiction + métadonnées (version de modèle, scores). 
+●​ Assurer au minimum le suivi des versions,des expériences et 
+quelques métriques via MLflow (monitoring modèle). Un suivi 
+exhaustif des expériences est optionnel. 
+●​ Écrire des tests unitaires et d’intégration (2 ou 3) pour valider le 
+pipeline de prédiction. 
+5.​ API OCR avec OCR.space 
+_10 
+ 
+●​ Après une veille comparative sur des services d’IA équivalents 
+répondant aux besoins de l’application, intégrer l’API 
+OCR.space (https://api.ocr.space/parse/image) ou un autre 
+service équivalent, pour traiter des fichiers image/PDF de 
+fiches de laboratoire. 
+●​ Concevoir une route, par exemple : 
+●​ POST /api/ocr/lab-report (client + clé API) : 
+●​ reçoit un fichier (image/PDF) représentant une 
+fiche laboratoire ; 
+●​ appelle OCR.space (via file ou base64Image) avec la 
+clé API OCR de la plateforme ; 
+●​ parse la réponse JSON pour extraire les champs 
+utiles (date, ID client, mesures physico-chimiques, 
+etc.) ; 
+●​ crée un prélèvement structuré identique à celui de 
+POST /api/measurements (ou utilise la même logique 
+métier) ; 
+●​ renvoie au client un identifiant de prélèvement et 
+les données extraites. 
+●​ Documenter cette route et les erreurs possibles (timeout OCR, 
+fichier illisible, champs manquants). 
+6.​ Interface web expert 
+●​ Développer une interface simple (Dash, Streamlit ou frontend 
+classique;  Streamlit fortement recommandé pour limiter la 
+complexité front) pour : 
+●​ consulter tous les prélèvements, 
+_11 
+ 
+●​ filtrer par client, provenance (Saisie / OCR), date, résultat 
+modèle, 
+●​ [option] afficher quelques indicateurs clés (nombre de 
+prélèvements, répartition potables / non potables, etc.), 
+●​ [option] visualiser quelques journaux d’accès (dans une 
+vue d’administration). 
+7.​ Tests, CI/CD, monitoring et incidents 
+●​ Écrire des tests unitaires et d’intégration (PyTest…) pour : 
+●​ API Data, API Model, API OCR, validation des schémas de 
+données, 
+●​ au moins un test de bout en bout (dépôt de fiche labo → 
+OCR → prélèvement structuré → prédiction modèle). 
+●​ Mettre en place une CI simple (GitHub Actions, GitLab CI) 
+exécutant les tests à chaque push/PR. 
+●​ Conteneuriser l’application (Docker) pour faciliter le 
+déploiement et la reproductibilité. 
+●​ Mettre en place un mécanisme de monitoring applicatif : 
+●​ journalisation des requêtes (client, route, status, durée), 
+●​ quelques métriques (nombre de requêtes OCR, taux 
+d’erreur, temps moyen de traitement). 
+●​ [Optionnel] ajouter une interface Prometheus + Grafana 
+pour visualiser les journaux, logs et indicateurs ou 
+métriques  
+●​ Mettre en place une intégration continue minimale (GitHub 
+Actions, GitLab CI…) qui installe les dépendances et exécute la 
+_12 
+ 
+suite de tests à chaque push. La livraison continue (build et 
+déploiement automatique) est un bonus si elle est réalisée. 
+●​ Prévoir au moins un scénario d’incident (par exemple, service 
+OCR indisponible, clé API OCR invalide, fail d’import) et 
+documenter : 
+●​ la détection de l’incident (logs, métriques), 
+●​ le diagnostic, 
+●​ la correction et sa vérification, 
+●​ la mise à jour du code / de la configuration et son 
+versionnement. 
+Dimensions RGPD et gouvernance des accès 
+L’introduction de l’ID client + clé API permet de traiter des enjeux RGPD 
+concrets, en base de données et dans les logs : 
+●​ séparation stricte des périmètres : un client ne voit que ses données ; 
+●​ minimisation des données personnelles stockées (ID technique + 
+adresse) ; 
+●​ journalisation des accès par clé API pour pouvoir répondre à un audit 
+de sécurité ; 
+●​ documentation des durées et règles de conservation des données 
+(prélèvements, logs). 
+Les étudiant·es devront : 
+●​ expliciter, dans la documentation, quelles données sont considérées 
+comme personnelles ; 
+●​ décrire comment les journaux d’accès sont gérés, à quelles fins et 
+pour combien de temps ; 
+_13 
+ 
+●​ expliquer comment la génération et la régénération des clés API sont 
+gérées (régénération en cas de compromission). Au minimum, la 
+documentation doit expliquer comment un client ne peut accéder 
+qu’à ses données (clé API + filtres) et comment une clé compromise 
+pourrait être régénérée. 
+ 
+Livrables  
+Vous livrerez les éléments suivants pour les présenter devant une audience 
+professionnelle: 
+●​ Présentation orale (diapositives) : 
+●​ mise en situation, analyse du besoin, profils utilisateurs, 
+●​ architecture, modèle de données, stratégie d’authentification 
+par clé API, 
+●​ intégration d’OCR.space, 
+●​ démonstration de la plateforme, 
+●​ tests, CI/CD, monitoring, incident traité. 
+●​ Repository GitHub public comprenant au minimum : 
+●​ README.md (contexte, installation, exemples d’appels API, 
+comptes de test, limites) ; 
+●​ dossier docs/ (cahier des charges, user stories, MCD/MPD, 
+diagramme d’architecture, note RGPD, fiche incident) ; 
+●​ code de la base de données et des scripts d’import ; 
+●​ API Data, API Model, API OCR ; 
+●​ interface web expert ; 
+●​ tests automatisés ; 
+●​ configuration de CI/CD ; 
+_14 
+ 
+●​ configuration Docker ; 
+●​ fichiers d’exemple pour l’API OCR (fiches labo anonymisées). 
+Rendu
+ 
+Le rendu doit permettre d’évaluer la qualité technique, la cohérence 
+fonctionnelle, la capacité de mise en production et la traçabilité du travail 
+réalisé par chaque membre de l’équipe. Les livrables ci-dessous sont 
+obligatoires, sauf mention contraire avec le préfixe [Optionnel]. 
+1. Dépôt GitHub 
+Un dépôt GitHub public (ou accessible aux encadrants) constitue le 
+livrable principal.​
+Il doit contenir au minimum : 
+●​ Le code source complet de l’API unique (modules Données, 
+Prédiction, OCR). 
+●​ Le code source de l’interface web expert (par exemple Streamlit ou 
+équivalent). 
+●​ Les scripts d’initialisation de la base de données et d’import de jeux 
+de données de test. 
+●​ Les fichiers de configuration nécessaires à l’exécution (configuration 
+applicative, fichiers de dépendances, etc.). 
+●​ L’historique Git avec des commits réguliers, explicites et attribuables 
+aux différents membres de l’équipe. 
+2. Conteneurisation et exécution 
+_15 
+ 
+Les principaux composants doivent être conteneurisés afin de pouvoir 
+lancer la plateforme facilement.​
+Le dépôt doit inclure : 
+●​ Un Dockerfile pour l’API. 
+●​ Un Dockerfile pour l’interface web, si elle est servie séparément. 
+●​ Un fichier d’orchestration (par exemple docker-compose.yml) 
+permettant de lancer l’API, la base de données et l’interface web. 
+●​ Un fichier d’exemple de variables d’environnement (par exemple 
+.env.example) indiquant les variables à renseigner. 
+●​ Des instructions claires expliquant comment cloner le dépôt, 
+configurer les variables d’environnement et démarrer la plateforme 
+en local. 
+3. Environnement de test automatisé 
+Le projet doit inclure un environnement de test exécutable en une ou deux 
+commandes.​
+Il doit contenir : 
+●​ Des tests unitaires couvrant au minimum la logique métier principale 
+(validation de données, prédiction, appels OCR simulés). 
+●​ Des tests d’intégration sur les endpoints clés (API Données, API 
+Prédiction, API OCR). 
+●​ Au moins un test de bout en bout : traitement complet d’un 
+prélèvement ou d’une fiche labo jusqu’à l’obtention d’une prédiction. 
+●​ Les jeux de données de test nécessaires. 
+●​ Les commandes (ou scripts) permettant de lancer l’ensemble des 
+tests. 
+_16 
+ 
+4. Scripts d’orchestration 
+Le dépôt doit proposer des scripts simples pour faciliter l’exploitation 
+technique et la démonstration.​
+Ils doivent permettre au minimum de : 
+●​ Initialiser la base de données (création des tables, import des 
+données de test). 
+●​ Lancer l’application en mode développement ou démo (API + base + 
+interface web). 
+●​ Lancer la suite de tests automatisés. 
+[Optionnel] Des scripts supplémentaires de build d’images ou de 
+déploiement peuvent être fournis si l’équipe le souhaite. 
+5. Documentation technique 
+Un fichier README.md à la racine du dépôt doit permettre à un lecteur 
+extérieur de comprendre le projet et de l’exécuter.​
+Il doit présenter notamment : 
+●​ Le contexte et les objectifs de la plateforme Waterflow 2. 
+●​ L’architecture générale (API unique, base de données, interface web, 
+intégration OCR). 
+●​ Les principaux composants du code et leur rôle. 
+●​ Les prérequis techniques. 
+●​ Les instructions d’installation et de lancement (mode local et via 
+Docker). 
+●​ Les commandes pour exécuter les tests. 
+●​ Les informations nécessaires pour utiliser les comptes et clés de test 
+(client, expert). 
+_17 
+ 
+●​ Les principales limites connues et quelques pistes d’amélioration. 
+Un dossier de documentation (par exemple /docs) doit compléter le 
+README avec : 
+●​ Les user stories principales et le cahier des charges fonctionnel. 
+●​ Le schéma d’architecture technique. 
+●​ Le modèle de données (MCD/MPD ou équivalent). 
+●​ Les choix techniques importants (frameworks, structure de l’API, 
+gestion de la clé API, intégration OCR). 
+●​ Une note synthétique sur la gestion des données personnelles et des 
+journaux d’accès. 
+●​ La description d’au moins un scénario d’incident et de sa résolution. 
+6. Documentation API 
+L’API doit être documentée de manière exploitable pour un intégrateur 
+externe.​
+La documentation doit décrire : 
+●​ Les endpoints disponibles (dépôt de prélèvements, consultation, 
+prédiction, OCR, etc.). 
+●​ Les formats de requête et de réponse (corps JSON, paramètres d’URL, 
+en-têtes). 
+●​ Les paramètres obligatoires et optionnels. 
+●​ Les codes de retour principaux et les erreurs possibles. 
+●​ Le mécanisme d’authentification par clé API. 
+●​ Au moins un exemple d’appel pour chaque route principale. 
+_18 
+ 
+Une 
+documentation 
+générée 
+automatiquement 
+(par 
+exemple 
+via 
+OpenAPI/Swagger ou FastAPI) est acceptée si elle est correctement 
+renseignée et accessible. 
+7. Restitution orale et démonstration 
+Chaque équipe doit présenter le projet lors d’une soutenance avec support 
+de présentation.​
+La restitution doit montrer : 
+●​ Le contexte et le besoin adressé par Waterflow 2. 
+●​ L’architecture retenue et les principaux choix techniques. 
+●​ Le fonctionnement de l’API (appel type montré en direct ou via 
+capture). 
+●​ La création d’un client test 
+●​ Le parcours d’un client final (dépôt de prélèvement ou fiche labo, 
+obtention des résultats / prédictions), 
+●​ Le parcours d’un expert sur l’interface web (consultation, filtres, 
+indicateurs). 
+●​ L’exécution d’une partie des tests automatisés ou la preuve de leur 
+intégration dans la CI. 
+●​ Les éléments de monitoring simples (logs, métriques affichées ou 
+consultables). 
+[Optionnel] La présentation peut inclure une démonstration d’un pipeline 
+CI ou d’un déploiement automatisé si l’équipe l’a mis en place. 
+Chaque étudiant devra présenter au moins un élément qu’il a développé 
+(endpoint, test, script, composant UI) et en expliquer les choix techniques. 
+_19 
+ 
+Base de connaissances
+  
+Les ressources ci-dessous sont fournies comme aide; le projet ne nécessite 
+pas d’implémenter la totalité des patterns avancés présentés.  
+Conteneurisation (Docker, Docker Compose) 
+●​ Dockeriser une app Flask (FR) 
+Comment dockeriser une application flask – JaaJBlog 
+○​ pas à pas pour écrire un Dockerfile Flask simple. 
+●​ Flask dans Docker (tutoriel guidé) 
+Exécution d'une application Flask dans un conteneur Docker – LabEx 
+○​ exemple complet de conteneurisation et exécution. 
+●​ Dockerfile multi‑stage pour Flask​
+Dockerizing a Flask Application: A Multi-Stage Dockerfile Approach 
+○​ image plus légère et plus proche d’un usage production. 
+MLOps et MLflow 
+●​ MLflow Tracking (officiel)​
+MLflow Tracking Quickstart 
+○​ comment loguer paramètres, métriques, artefacts et utiliser l’UI 
+MLflow. 
+Tests automatisés (Pytest) 
+●​ Pytest en français​
+Pytest pour Python : Pourquoi et comment l'utiliser ? 
+○​ introduction aux tests, structure, assertions et bonnes 
+pratiques. 
+_20 
+ 
+Intégration continue (CI) GitHub Actions 
+●​ CI Python avec GitHub Actions​
+Testing your Python Project with GitHub Actions 
+○​ workflow YAML minimal pour lancer les tests à chaque push. 
+APIs REST, FastAPI et documentation OpenAPI 
+●​ FastAPI – tutoriel utilisateur (FR)​
+Tutoriel – Guide utilisateur – FastAPI 
+○​ créer une API REST propre avec validation et documentation 
+auto. 
+●​ Bonnes pratiques REST 2024​
+RESTful API Design Best Practices Guide 2024 
+○​ conventions routes, statuts, pagination, erreurs, sécurité. 
+●​ Introduction OpenAPI / Swagger​
+What Is OpenAPI? – Swagger Docs 
+○​ principes de la spec et outils Swagger pour documenter/tester 
+une API. 
+Monitoring, logs et dashboards 
+●​ Prometheus + Grafana (FR)​
+Tuto monitoring Prometheus, partie III : Grafana 
+○​ création de dashboards de supervision à partir de métriques. 
+RGPD pour développeurs 
+●​ Guide RGPD de la CNIL (développeurs)​
+Guide RGPD de l'équipe de développement 
+○​ checklist et recommandations RGPD appliquées au code, aux 
+bases et aux journaux. 
+_21 

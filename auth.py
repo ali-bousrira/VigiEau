@@ -79,7 +79,7 @@ def _load_expert_tokens() -> dict[str, tuple[str, str]]:
         if not entry:
             continue
 
-        parts = entry.split(":")
+        parts = entry.split(":", 2)
         if len(parts) != 3:
             logger.warning(
                 "EXPERT_TOKENS : entrée ignorée (format attendu login:token:role) : %r",
