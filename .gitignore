@@ -27,3 +27,5 @@ venv/
 
 # Documentation (local only, not versioned)
 docs/
+CLAUDE.md
+guide-claude-code-waterflow.md
