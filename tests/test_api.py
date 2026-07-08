@@ -14,7 +14,7 @@ Tokens et env vars initialisés par tests/conftest.py.
 import os
 import secrets
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock
 import numpy as np
 
 # ── Mocks ML ────────────────────────────────────────────────────────────────
@@ -25,11 +25,13 @@ _mock_model.predict_proba.return_value  = np.array([[0.13, 0.87]])
 _mock_scaler = MagicMock()
 _mock_scaler.transform.side_effect = lambda x: x
 
-with patch("mlflow.xgboost.load_model", return_value=_mock_model), \
-     patch("joblib.load",               return_value=_mock_scaler), \
-     patch("mlflow.set_tracking_uri"):
-    from api.app        import create_app
-    from api.models.db  import init_db, SessionLocal, Client
+import predict_service
+from api.app        import create_app
+from api.models.db  import init_db, SessionLocal, Client
+
+predict_service._model         = _mock_model
+predict_service._scaler        = _mock_scaler
+predict_service._model_version = "mock"
 
 # ── Constantes ───────────────────────────────────────────────────────────────
 ALICE_HEADER  = {"Authorization": "Bearer token-alice"}   # analyste
@@ -389,6 +391,31 @@ class TestAnalyste:
         r = http.get("/analyste/clients/INEXISTANT/prelevements",
                      headers=ALICE_HEADER)
         assert r.status_code == 404
+
+    def test_filtre_potable_ne_retourne_que_les_potables(self, http):
+        r = http.get("/analyste/prelevements?potable=1", headers=ALICE_HEADER)
+        assert r.status_code == 200
+        items = r.get_json()["items"]
+        assert items
+        assert all(it["prediction"]["potable"] == 1 for it in items)
+
+    def test_filtre_potable_ne_retourne_que_les_non_potables(self, http):
+        from api.models.db import Prelevement, Prediction
+        db     = SessionLocal()
+        client = db.query(Client).filter(Client.id_client == "TEST-001").first()
+        prev   = Prelevement(client_id=client.id)
+        db.add(prev); db.commit()
+        db.add(Prediction(prelevement_id=prev.id, potable=0,
+                           probability=0.05, model_version="test"))
+        db.commit()
+        prev_id = prev.id
+        db.close()
+
+        r = http.get("/analyste/prelevements?potable=0", headers=ALICE_HEADER)
+        assert r.status_code == 200
+        items = r.get_json()["items"]
+        assert any(it["id"] == prev_id for it in items)
+        assert all(it["prediction"]["potable"] == 0 for it in items)
 
 
 # ════════════════════════════════════════════════════════════════════════════

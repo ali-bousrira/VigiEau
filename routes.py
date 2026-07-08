@@ -792,7 +792,7 @@ def admin_generate_apikey(client_id: str):
 def analyste_prelevements():
     """
     Tous les prélèvements — paginés, filtrables.
-    Filtres : client_id (id_client métier), source, date_from, date_to
+    Filtres : client_id (id_client métier), source, date_from, date_to, potable (0|1)
     """
     db        = g.db
     page, ppp = _page_params()
@@ -815,6 +815,11 @@ def analyste_prelevements():
                 q  = q.filter(getattr(Prelevement.date_prelevement, op)(dt))
             except ValueError:
                 pass
+
+    if request.args.get("potable") in ("0", "1"):
+        q = q.join(Prediction).filter(
+            Prediction.potable == int(request.args["potable"])
+        ).distinct()
 
     paged = _paginate(q, page, ppp)
     log_audit("analyste_read_prelevements", status_code=200)

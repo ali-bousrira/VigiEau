@@ -223,7 +223,7 @@
             <div id="tab-prevs" class="hidden">
                 <!-- Filter bar -->
                 <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 mb-4 fade-in">
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
                         <div>
                             <label class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Client</label>
                             <input id="f-client" type="text" placeholder="COMM-042…"
@@ -237,6 +237,15 @@
                                 <option value="">Toutes</option>
                                 <option value="manual">Manuel</option>
                                 <option value="ocr">OCR</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Résultat</label>
+                            <select id="f-potable"
+                                class="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors">
+                                <option value="">Tous</option>
+                                <option value="1">Potable</option>
+                                <option value="0">Non potable</option>
                             </select>
                         </div>
                         <div>
@@ -780,10 +789,12 @@ async function loadAllPrevs() {
     const params = new URLSearchParams({ per_page: 50 });
     const client   = document.getElementById('f-client')?.value.trim();
     const source   = document.getElementById('f-source')?.value;
+    const potable  = document.getElementById('f-potable')?.value;
     const dateFrom = document.getElementById('f-date-from')?.value;
     const dateTo   = document.getElementById('f-date-to')?.value;
     if (client)   params.set('client_id',  client);
     if (source)   params.set('source',     source);
+    if (potable)  params.set('potable',    potable);
     if (dateFrom) params.set('date_from',  dateFrom);
     if (dateTo)   params.set('date_to',    dateTo);
 
@@ -804,6 +815,7 @@ function resetFilters() {
         const el = document.getElementById(id); if (el) el.value = '';
     });
     const src = document.getElementById('f-source'); if (src) src.value = '';
+    const pot = document.getElementById('f-potable'); if (pot) pot.value = '';
     const cnt = document.getElementById('f-count'); if (cnt) cnt.textContent = '';
     loadAllPrevs();
 }

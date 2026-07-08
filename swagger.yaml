@@ -403,6 +403,11 @@ paths:
           in: query
           type: string
           enum: [manual, ocr, api]
+        - name: potable
+          in: query
+          type: string
+          enum: ["0", "1"]
+          description: Filtre sur le résultat de la dernière prédiction (0 = non potable, 1 = potable)
         - name: date_debut
           in: query
           type: string

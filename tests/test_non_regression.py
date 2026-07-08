@@ -13,7 +13,7 @@ Env vars et tokens initialisés par conftest.py.
 
 import pytest
 import numpy as np
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock
 
 _mock_model  = MagicMock()
 _mock_model.predict.return_value       = np.array([1])
@@ -40,15 +40,16 @@ FEATURES = [
 
 @pytest.fixture(scope="module")
 def app():
-    with patch("mlflow.xgboost.load_model", return_value=_mock_model), \
-         patch("joblib.load",               return_value=_mock_scaler), \
-         patch("mlflow.set_tracking_uri"):
-        from api.app       import create_app
-        from api.models.db import init_db
-        application = create_app()
-        application.config["TESTING"] = True
-        init_db()
-        return application
+    import predict_service
+    from api.app       import create_app
+    from api.models.db import init_db
+    predict_service._model         = _mock_model
+    predict_service._scaler        = _mock_scaler
+    predict_service._model_version = "mock"
+    application = create_app()
+    application.config["TESTING"] = True
+    init_db()
+    return application
 
 
 @pytest.fixture(scope="module")
