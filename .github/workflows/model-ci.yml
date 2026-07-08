@@ -1,0 +1,50 @@
+name: Waterflow 2 — Model CI (MLOps)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, develop]
+    paths:
+      - water_potability.csv
+      - scripts/train_model.py
+      - requirements.txt
+
+jobs:
+  train-and-validate:
+    name: Validation données + entraînement + évaluation
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Installer les dépendances
+        run: pip install -r requirements.txt
+
+      - name: Valider le jeu de données
+        run: pytest tests/test_unitaires.py::TestDataset -v
+
+      - name: Entraîner, évaluer et enregistrer le modèle (gate qualité)
+        env:
+          MLFLOW_TRACKING_URI: sqlite:///mlflow_water.db
+        run: |
+          python scripts/train_model.py \
+            --min-roc-auc 0.82 \
+            --min-f1 0.65
+
+      - name: Publier les artefacts du modèle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-artifacts-${{ github.sha }}
+          path: |
+            model_artifacts/
+            mlflow_artifacts/
+            mlflow_water.db
+          retention-days: 30
+          if-no-files-found: warn

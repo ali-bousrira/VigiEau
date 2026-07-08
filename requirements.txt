@@ -12,6 +12,9 @@ xgboost>=2.0
 joblib>=1.3
 numpy>=1.26
 scikit-learn>=1.4        # pour le scaler
+pandas>=2.1               # chargement/nettoyage des jeux de données
+scipy>=1.11                # winsorisation (scripts/train_model.py)
+imbalanced-learn>=0.12    # SMOTE (scripts/train_model.py)
 
 # ── OCR & Vision ──────────────────────────────────────────────────────────
 anthropic>=0.28          # Claude Vision (fallback OCR)
