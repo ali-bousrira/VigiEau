@@ -25,7 +25,5 @@ venv/
 .ipynb_checkpoints/
 *.pdf
 
-# Documentation (local only, not versioned)
-docs/
 CLAUDE.md
 guide-claude-code-waterflow.md

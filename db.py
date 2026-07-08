@@ -72,9 +72,10 @@ class ExpertRole(str, enum.Enum):
 
 
 class IngestionSource(str, enum.Enum):
-    MANUAL = "manual"   # saisie JSON directe
-    OCR    = "ocr"      # extraction fiche PDF/image
-    API    = "api"      # dépôt programmatique sans OCR
+    MANUAL   = "manual"    # saisie JSON directe
+    OCR      = "ocr"       # extraction fiche PDF/image
+    API      = "api"       # dépôt programmatique sans OCR
+    OPENDATA = "opendata"  # import automatisé depuis une source ouverte (ex. Hub'Eau)
 
 
 # ── Clients (collectivités) ──────────────────────────────────────────────────
