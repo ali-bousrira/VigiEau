@@ -31,9 +31,10 @@ FOR_RE   = re.compile(r'\bfor\s*=\s*"', re.IGNORECASE)
 LIVE_REGION_IDS = [
     "login-err", "manual-res", "ocr-res", "nc-res",
     "c-prevs", "e-prevs", "clis-list", "cd-list", "cd-prevs", "api-endpoints",
+    "e-audit",
 ]
 
-TAB_IDS = ["dash", "prevs", "clis", "cliDash", "api"]
+TAB_IDS = ["dash", "prevs", "clis", "cliDash", "api", "audit"]
 
 
 class TestLabels:

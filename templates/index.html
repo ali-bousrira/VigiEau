@@ -111,6 +111,10 @@
                     class="tab-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-colors">
                     <span aria-hidden="true">🔌</span> API
                 </button>
+                <button id="tabbtn-audit" onclick="showTab('audit')" data-tab="audit" role="tab" aria-selected="false"
+                    class="hidden tab-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-colors">
+                    <span aria-hidden="true">🛡</span> Audit
+                </button>
             </nav>
             <div class="flex items-center gap-3 shrink-0">
                 <div class="flex items-center gap-1.5">
@@ -412,6 +416,49 @@
                 <div id="api-endpoints" class="space-y-6" aria-live="polite"></div>
             </div>
 
+            <!-- Tab: Audit (exploit uniquement) -->
+            <div id="tab-audit" class="hidden" role="tabpanel" aria-label="Audit">
+                <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 mb-4 fade-in">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label for="f-audit-type" class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Type d'acteur</label>
+                            <select id="f-audit-type"
+                                class="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors">
+                                <option value="">Tous</option>
+                                <option value="client">Client</option>
+                                <option value="expert">Expert</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="f-audit-id" class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Identifiant acteur</label>
+                            <input id="f-audit-id" type="text" placeholder="COMM-042 ou login…"
+                                class="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+                                onkeydown="if(event.key==='Enter')loadAudit()">
+                        </div>
+                        <div>
+                            <label for="f-audit-action" class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Action</label>
+                            <input id="f-audit-action" type="text" placeholder="ex. ingest, login, rgpd…"
+                                class="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+                                onkeydown="if(event.key==='Enter')loadAudit()">
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 mt-3">
+                        <button onclick="loadAudit()"
+                            class="bg-blue-600 hover:bg-blue-500 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors">
+                            Filtrer
+                        </button>
+                        <button onclick="resetAuditFilters()"
+                            class="bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg px-4 py-2 text-sm font-medium transition-colors">
+                            Réinitialiser
+                        </button>
+                        <span id="f-audit-count" class="text-xs text-slate-500 ml-auto"></span>
+                    </div>
+                </div>
+                <div class="bg-slate-800 border border-slate-700 rounded-2xl fade-in">
+                    <div id="e-audit" aria-live="polite"></div>
+                </div>
+            </div>
+
         </div>
     </main>
 </div>
@@ -532,6 +579,7 @@ function showApp() {
         }`;
         document.getElementById('hdr-user').textContent =
             role === 'exploit' ? 'Responsable exploitation' : 'Analyste qualité';
+        document.getElementById('tabbtn-audit').classList.toggle('hidden', role !== 'exploit');
         document.getElementById('expert-tabs').classList.remove('hidden');
         document.getElementById('vw-client').classList.add('hidden');
         document.getElementById('vw-expert').classList.remove('hidden');
@@ -540,13 +588,14 @@ function showApp() {
 }
 
 function showTab(tab) {
-    ['dash', 'prevs', 'clis', 'cliDash', 'api'].forEach(t => document.getElementById(`tab-${t}`)?.classList.add('hidden'));
+    ['dash', 'prevs', 'clis', 'cliDash', 'api', 'audit'].forEach(t => document.getElementById(`tab-${t}`)?.classList.add('hidden'));
     document.getElementById(`tab-${tab}`)?.classList.remove('hidden');
     document.querySelectorAll('.tab-btn').forEach(b => {
-        const active = b.dataset.tab === tab;
+        const active   = b.dataset.tab === tab;
+        const wasHidden = b.classList.contains('hidden');
         b.className = `tab-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
             active ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
-        }`;
+        }${wasHidden ? ' hidden' : ''}`;
         b.setAttribute('aria-selected', active ? 'true' : 'false');
     });
     if (tab === 'dash')  loadDashboard();
@@ -554,6 +603,7 @@ function showTab(tab) {
     if (tab === 'clis')  loadClients();
     if (tab === 'cliDash') loadCliDashList();
     if (tab === 'api' && !_apiSpec) loadApiExplorer();
+    if (tab === 'audit') loadAudit();
 }
 
 // ════════════════════════════════════════
@@ -820,6 +870,63 @@ function resetFilters() {
     const pot = document.getElementById('f-potable'); if (pot) pot.value = '';
     const cnt = document.getElementById('f-count'); if (cnt) cnt.textContent = '';
     loadAllPrevs();
+}
+
+// ════════════════════════════════════════
+// EXPLOIT — Audit (role="exploit" uniquement)
+// ════════════════════════════════════════
+function auditTable(items) {
+    if (!items.length) return '<p class="text-slate-500 text-sm text-center py-10">Aucune entrée.</p>';
+    const cols = ['Horodatage', 'Acteur', 'Rôle', 'Action', 'Ressource', 'Statut', 'IP', 'Détail'];
+    return `<div class="overflow-x-auto">
+    <table class="w-full text-sm">
+        <thead><tr class="text-xs text-slate-500 uppercase tracking-wide border-b border-slate-700">
+            ${cols.map(c => `<th class="text-left px-6 py-3">${c}</th>`).join('')}
+        </tr></thead>
+        <tbody>${items.map(l => `<tr class="border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors">
+                <td class="px-6 py-3 text-slate-400 whitespace-nowrap">${new Date(l.timestamp).toLocaleString('fr-FR')}</td>
+                <td class="px-6 py-3 font-medium text-slate-300">${l.actor_type}${l.actor_id ? ` · ${l.actor_id}` : ''}</td>
+                <td class="px-6 py-3 text-slate-400">${l.actor_role || '—'}</td>
+                <td class="px-6 py-3 font-mono text-xs text-slate-300">${l.action}</td>
+                <td class="px-6 py-3 text-slate-500 font-mono text-xs">${l.resource_id || '—'}</td>
+                <td class="px-6 py-3 ${l.status_code >= 400 ? 'text-red-400' : 'text-slate-400'}">${l.status_code}</td>
+                <td class="px-6 py-3 text-slate-500 font-mono text-xs">${l.ip_address || '—'}</td>
+                <td class="px-6 py-3 text-slate-500 text-xs truncate max-w-xs">${l.detail || '—'}</td>
+            </tr>`).join('')}</tbody>
+    </table></div>`;
+}
+
+async function loadAudit() {
+    const el = document.getElementById('e-audit');
+    el.innerHTML = spinnerHtml();
+
+    const params     = new URLSearchParams({ per_page: 50 });
+    const actorType  = document.getElementById('f-audit-type')?.value;
+    const actorId    = document.getElementById('f-audit-id')?.value.trim();
+    const action     = document.getElementById('f-audit-action')?.value.trim();
+    if (actorType) params.set('actor_type', actorType);
+    if (actorId)   params.set('actor_id',   actorId);
+    if (action)    params.set('action',     action);
+
+    try {
+        const d = await api('GET', `/exploitation/audit?${params}`);
+        const items = d.items || [];
+        const total = d.total || 0;
+        el.innerHTML = auditTable(items);
+        const cnt = document.getElementById('f-audit-count');
+        if (cnt) cnt.textContent = total > 0 ? `${total} entrée${total > 1 ? 's' : ''}` : 'Aucune entrée';
+        if (total > 50)
+            el.innerHTML += `<p class="text-xs text-slate-600 text-center py-3">${total} entrées — affichage limité à 50</p>`;
+    } catch(e) { el.innerHTML = '<p class="text-red-400 text-sm text-center py-8">Erreur.</p>'; }
+}
+
+function resetAuditFilters() {
+    ['f-audit-id', 'f-audit-action'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = '';
+    });
+    const type = document.getElementById('f-audit-type'); if (type) type.value = '';
+    const cnt  = document.getElementById('f-audit-count'); if (cnt) cnt.textContent = '';
+    loadAudit();
 }
 
 // ════════════════════════════════════════
