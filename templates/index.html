@@ -230,9 +230,10 @@
                     <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
                         <div>
                             <label for="f-client" class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Client</label>
-                            <input id="f-client" type="text" placeholder="COMM-042…"
-                                class="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
-                                onkeydown="if(event.key==='Enter')loadAllPrevs()">
+                            <select id="f-client"
+                                class="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors">
+                                <option value="">Tous les clients</option>
+                            </select>
                         </div>
                         <div>
                             <label for="f-source" class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Source</label>
@@ -599,7 +600,7 @@ function showTab(tab) {
         b.setAttribute('aria-selected', active ? 'true' : 'false');
     });
     if (tab === 'dash')  loadDashboard();
-    if (tab === 'prevs') loadAllPrevs();
+    if (tab === 'prevs') { loadPrevsClientOptions(); loadAllPrevs(); }
     if (tab === 'clis')  loadClients();
     if (tab === 'cliDash') loadCliDashList();
     if (tab === 'api' && !_apiSpec) loadApiExplorer();
@@ -834,6 +835,28 @@ async function loadDashboard() {
 // ════════════════════════════════════════
 // EXPERT — Prélèvements
 // ════════════════════════════════════════
+let _prevsClientsLoaded = false;
+
+async function loadPrevsClientOptions() {
+    if (_prevsClientsLoaded) return;
+    const sel = document.getElementById('f-client');
+    if (!sel) return;
+    try {
+        const clients = await api('GET', '/admin/clients');
+        const current = sel.value;
+        clients
+            .sort((a, b) => (a.denomination || '').localeCompare(b.denomination || ''))
+            .forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id_client;
+                opt.textContent = `${c.denomination} (${c.id_client})`;
+                sel.appendChild(opt);
+            });
+        sel.value = current;
+        _prevsClientsLoaded = true;
+    } catch(e) { /* le select reste utilisable avec "Tous les clients" seul */ }
+}
+
 async function loadAllPrevs() {
     const el = document.getElementById('e-prevs');
     el.innerHTML = spinnerHtml();

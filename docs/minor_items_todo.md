@@ -9,10 +9,10 @@
   `actor_type`/`actor_id`/`action`, table paginée. Vérifié en réel avec
   Playwright (connexion exploit → 3 entrées réelles affichées, IP
   pseudonymisée visible ; connexion analyste → bouton absent).
-- [ ] **Dropdown client dans l'UI Prélèvements** — `f-client` est
-  actuellement un champ texte libre (`id_client` exact requis) ; le
-  transformer en `<select>` alimenté par `GET /admin/clients`, cohérent
-  avec le confort déjà présent ailleurs (ex. "Par client").
+- [x] **Dropdown client dans l'UI Prélèvements** — `f-client` est devenu
+  un `<select>` alimenté par `GET /admin/clients` (trié par dénomination,
+  chargé une fois par session). Vérifié en réel avec Playwright : options
+  correctement peuplées et triées, sélection + filtre fonctionnels.
 - [ ] **Badge CI/CD dans `README.md`** — badge de statut GitHub Actions
   pointant vers `.github/workflows/ci.yml` (remote `helio-aubrun/waterflow`).
 - [ ] **Note SQLite/PostgreSQL dans `README.md`** — expliciter dans
