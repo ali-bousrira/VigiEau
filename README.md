@@ -1,5 +1,8 @@
 # Waterflow 2 — Plateforme MLOps Qualité de l'Eau
 
+[![CI](https://github.com/helio-aubrun/waterflow/actions/workflows/ci.yml/badge.svg)](https://github.com/helio-aubrun/waterflow/actions/workflows/ci.yml)
+[![Model CI](https://github.com/helio-aubrun/waterflow/actions/workflows/model-ci.yml/badge.svg)](https://github.com/helio-aubrun/waterflow/actions/workflows/model-ci.yml)
+
 Plateforme de classification de la potabilité de l'eau destinée aux collectivités territoriales.
 Exposée via une **API Flask unique** portant trois modules : données, prédiction ML et ingestion OCR.
 
@@ -9,30 +12,33 @@ Exposée via une **API Flask unique** portant trois modules : données, prédict
 
 ```
 waterflow/
-├── api/
-│   ├── app.py                  # Factory Flask + init Swagger
-│   ├── models/db.py            # Modèles SQLAlchemy (RGPD)
-│   ├── middleware/auth.py      # Auth clé API (clients) + Bearer (experts)
-│   ├── routes/routes.py        # Toutes les routes API
-│   └── services/
-│       ├── ocr_service.py      # OCR.space (primaire) + Claude Vision (fallback)
-│       └── predict_service.py  # XGBoost via MLflow
-├── templates/index.html        # Interface web expert
+├── api/                         # Re-exports (voir docs/architecture.md pour le détail)
+│   ├── app.py                  # Factory Flask (source canonique) + init Swagger
+│   ├── models/db.py            # Re-export de db.py (racine)
+│   ├── middleware/auth.py      # Re-export de auth.py (racine)
+│   ├── routes/routes.py        # Re-export de routes.py (racine)
+│   └── services/                # Re-exports de ocr_service.py / predict_service.py (racine)
+├── routes.py                    # Source canonique : toutes les routes API
+├── db.py                        # Source canonique : modèles SQLAlchemy (RGPD)
+├── auth.py                      # Source canonique : auth clé API (clients) + Bearer (experts)
+├── ocr_service.py               # OCR.space (primaire) + Claude Vision (fallback)
+├── predict_service.py           # XGBoost via MLflow (chargement paresseux)
+├── templates/index.html         # Interface web unique (client + experts)
 ├── scripts/
-│   └── init_db.py              # Initialisation DB + données de test
-├── tests/
-│   ├── test_api.py             # Tests intégration complets (Waterflow 2)
-│   ├── test_e2e.py             # Test bout en bout : OCR → prédiction
-│   ├── test_unitaires.py       # Tests unitaires (modèle)
-│   ├── test_fonctionnels.py    # Tests fonctionnels (routes)
-│   └── test_non_regression.py  # Tests de non-régression
+│   ├── init_db.py              # Initialisation DB + données de test
+│   ├── ingest_hubeau.py        # Import depuis l'API ouverte Hub'Eau (source de données publique)
+│   └── train_model.py          # Pipeline d'entraînement/évaluation/gate du modèle
+├── tests/                       # pytest — voir "Lancer les tests"
 ├── samples/                    # Fiches labo anonymisées (exemples OCR)
-├── model_artifacts/            # Modèle XGBoost + scaler
+├── model_artifacts/            # Modèle XGBoost + scaler (régénérés, non versionnés)
+├── docs/                       # Vault Obsidian — architecture, MCD, RGPD, user stories…
+├── .github/workflows/
+│   ├── ci.yml                  # CI applicative : lint, tests, build Docker, déploiement
+│   └── model-ci.yml            # CI modèle : validation données, entraînement, gate qualité
 ├── swagger.yaml                # Documentation OpenAPI — accessible sur /apidocs
 ├── main.py                     # Point d'entrée Gunicorn
 ├── Dockerfile
 ├── docker-compose.yml
-├── ci.yml                      # CI/CD GitHub Actions
 ├── requirements.txt
 └── .env.example
 ```
@@ -214,7 +220,7 @@ Le dossier `samples/` contient deux fiches anonymisées :
 - Table `audit_logs` immuable — journal de tous les accès
 - Droit à l'effacement via `DELETE /me/rgpd`
 - Conservation des logs : 12 mois glissants
-- Documentation complète : `docs/rgpd.md` (local, non versionné)
+- Documentation complète : `docs/rgpd.md`
 
 ---
 
@@ -225,3 +231,11 @@ Le dossier `samples/` contient deux fiches anonymisées :
 - La clé API est unique par client (pas de rotation multiple simultanée)
 - Prometheus/Grafana non intégrés (métriques accessibles via `/exploitation/metrics`)
 - Authentification expert par token statique (pas de rotation automatique)
+- **SQLite en développement comme en production Docker**, bien que
+  `DATABASE_URL` accepte nativement PostgreSQL (`postgresql://user:pass@host:5432/db`,
+  voir `.env.example`) : `docker-compose.yml` ne déclare pas de service
+  PostgreSQL. Pour basculer : ajouter un service `postgres` (image
+  `postgres:16`, volume dédié) au compose, pointer `DATABASE_URL` dessus,
+  et ajouter `psycopg2-binary` à `requirements.txt`. Aucune migration
+  Alembic n'existe à ce jour — `init_db()` recrée le schéma via
+  `Base.metadata.create_all()`.
