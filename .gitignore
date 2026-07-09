@@ -29,3 +29,7 @@ venv/
 
 CLAUDE.md
 guide-claude-code-waterflow.md
+
+# Obsidian editor config (keep the notes, ignore the workspace state)
+.obsidian/
+.trash/

@@ -10,6 +10,19 @@
 
 ---
 
+## Référentiel accessibilité
+
+Les critères d'acceptation ci-dessous suivent le **RGAA** (Référentiel
+Général d'Amélioration de l'Accessibilité), pertinent pour une plateforme
+liée au service public de l'eau. Chaque user story avec une contrepartie
+dans l'interface web (`templates/index.html`) précise les critères RGAA
+concernés ; les opérations exposées uniquement via API n'ont pas de
+critère RGAA propre (l'accessibilité s'applique à l'interface, pas au
+contrat API), mais devront en recevoir un le jour où une interface leur
+sera ajoutée.
+
+---
+
 ## Client final
 
 ### US-01 — Création de compte
@@ -19,6 +32,9 @@
 - `POST /admin/clients` crée le client avec `id_client`, `denomination`, `adresse`
 - La clé API est générée et retournée une seule fois (jamais stockée en clair)
 - Le client reçoit sa clé et peut l'utiliser immédiatement
+- *Accessibilité (RGAA, formulaire "Nouveau client")* : chaque champ a un
+  `<label for>` associé à son `id` ; le résultat (succès/erreur) est
+  annoncé via `aria-live` sans déplacer le focus
 
 **Route :** `POST /admin/clients` (admin seulement)
 
@@ -32,6 +48,12 @@
 - La prédiction inclut : `potable` (0/1), `probability`, `model_version`
 - Le prélèvement est stocké avec `source = MANUAL`
 - Toute requête invalide (champ manquant, type incorrect) retourne HTTP 422
+- *Accessibilité (RGAA, formulaire "Nouvelle analyse manuelle")* : les 9
+  champs ont chacun un `<label for>` lié ; les indications de plage OMS
+  (ex. "pH : 6.5–8.5") sont rattachées au champ via `aria-describedby`, pas
+  seulement affichées visuellement à côté ; le résultat de la prédiction
+  (potable/non potable) n'est jamais porté par la seule couleur du badge
+  (texte toujours présent) et est annoncé via `aria-live`
 
 **Route :** `POST /ingest/manual`
 
@@ -46,6 +68,10 @@
 - Filtrable par `date_debut` et `date_fin`
 - `GET /me/prelevements/<id>` retourne le détail avec la prédiction associée
 - Un client ne peut pas accéder aux données d'un autre client (HTTP 403)
+- *Accessibilité (RGAA, liste "Mes prélèvements")* : la liste est dans une
+  zone `aria-live="polite"` (chargement/erreur annoncés), le titre de
+  section est un vrai élément de titre (`<h2>`), pas un `<p>`/`<span>`
+  stylé
 
 **Routes :** `GET /me/prelevements`, `GET /me/prelevements/<id>`, `GET /me/resultats`
 
@@ -60,6 +86,11 @@
 - Un prélèvement est créé avec `source = OCR` même si certaines mesures manquent
 - La réponse indique `prediction_possible: true/false` selon la complétude des mesures
 - `POST /ingest/ocr-and-predict` enchaîne OCR et prédiction en un appel
+- *Accessibilité (RGAA, zone de dépôt de fichier)* : la zone de dépôt est
+  un `<label>` lié à l'`<input type="file">` (déjà le cas — sert de
+  référence aux autres formulaires), utilisable au clavier (Tab puis
+  Entrée ouvre le sélecteur natif) ; le résultat d'extraction (avertissements,
+  mesures incomplètes) est annoncé via `aria-live`
 
 **Routes :** `POST /ingest/ocr`, `POST /ingest/ocr-and-predict`
 
@@ -72,6 +103,10 @@
 - `GET /me/rgpd` retourne : profil, historique d'accès, règles de conservation
 - `DELETE /me/rgpd` anonymise le compte de manière irréversible
 - L'opération d'anonymisation est tracée dans `audit_logs`
+- *Accessibilité* : pas d'interface web dédiée à ce jour (API uniquement).
+  Si une interface est ajoutée, la confirmation de suppression (irréversible)
+  devra être un vrai dialogue modal accessible (focus piégé à l'ouverture,
+  fermeture au clavier via Échap, focus restitué au déclencheur à la fermeture)
 
 **Routes :** `GET /me/rgpd`, `DELETE /me/rgpd`
 
@@ -86,6 +121,10 @@
 - `GET /analyste/dashboard` retourne : taux de potabilité, moyennes chimiques, répartition par source (MANUAL/OCR/API), 15 derniers prélèvements
 - `GET /analyste/prelevements` liste tous les prélèvements avec pagination
 - Filtrage par `client_id`, `source`, `date_debut`, `date_fin`
+- *Accessibilité (RGAA, navigation par onglets Dashboard/Prélèvements/Clients/…)* :
+  la barre d'onglets porte `role="tablist"`, chaque onglet `role="tab"` +
+  `aria-selected` mis à jour dynamiquement, chaque panneau `role="tabpanel"` ;
+  les filtres (client, source, résultat, dates) ont chacun un `<label for>` lié
 
 **Routes :** `GET /analyste/dashboard`, `GET /analyste/prelevements`
 
@@ -97,6 +136,10 @@
 **Critères d'acceptation :**
 - `GET /analyste/prelevements/<id>` inclut `ocr_raw_text` et `ocr_warnings`
 - La prédiction associée avec `model_version` MLflow est visible
+- *Accessibilité* : le résultat potable/non potable combine toujours
+  couleur et texte (jamais la couleur seule) ; la sélection d'une ligne
+  de la liste "Par client" est utilisable au clavier (`role="button"`,
+  `tabindex="0"`, activation Entrée/Espace), pas seulement à la souris
 
 **Route :** `GET /analyste/prelevements/<id>`
 
@@ -110,6 +153,10 @@
 **Critères d'acceptation :**
 - `GET /exploitation/metrics` retourne : volume par route, p50/p95/moyenne de latence, taux d'erreur par route
 - Les métriques couvrent les 24 dernières heures
+- *Accessibilité* : pas de vue dédiée dans l'interface web à ce jour
+  (accessible via l'onglet "API" générique, dont chaque champ de paramètre
+  a désormais un `<label for>` lié). Une vue dédiée future devra suivre les
+  mêmes règles que le Dashboard analyste (US-06)
 
 **Route :** `GET /exploitation/metrics`
 
@@ -122,6 +169,9 @@
 - `GET /exploitation/audit` retourne les entrées `audit_logs` paginées
 - Filtrable par `actor_type`, `action`, `date_debut`, `date_fin`
 - Les IPs sont pseudonymisées (dernier octet masqué)
+- *Accessibilité* : idem US-08, pas de vue dédiée à ce jour — dette
+  technique connue (voir `RAPPORT_CONFORMITE.md`), à traiter avec les
+  mêmes règles RGAA que le reste de l'interface le jour où elle sera ajoutée
 
 **Route :** `GET /exploitation/audit`
 
@@ -135,5 +185,9 @@
 - `PUT /admin/clients/<id>` permet de désactiver (`actif: false`)
 - `POST /admin/clients/<id>/apikey` régénère la clé (ancienne immédiatement invalide)
 - La nouvelle clé est retournée une seule fois
+- *Accessibilité (RGAA, onglet "Clients")* : formulaire de création avec
+  labels liés (US-01) ; la génération d'une nouvelle clé API doit annoncer
+  son résultat via `aria-live` plutôt qu'une alerte native `window.alert()`
+  sur le chemin d'erreur uniquement — dette technique connue, à corriger
 
 **Routes :** `POST /admin/clients`, `PUT /admin/clients/<id>`, `POST /admin/clients/<id>/apikey`

@@ -53,18 +53,18 @@
                 </button>
             </div>
             <div id="ls-client">
-                <label class="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">Clé API</label>
+                <label for="inp-key" class="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">Clé API</label>
                 <input id="inp-key" type="password" placeholder="Collez votre X-API-Key…"
                     class="w-full bg-[#0f172a] border border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
                     onkeydown="if(event.key==='Enter')doLogin()">
             </div>
             <div id="ls-expert" class="hidden">
-                <label class="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">Token Bearer</label>
+                <label for="inp-tok" class="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">Token Bearer</label>
                 <input id="inp-tok" type="password" placeholder="Collez votre token expert…"
                     class="w-full bg-[#0f172a] border border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
                     onkeydown="if(event.key==='Enter')doLogin()">
             </div>
-            <div id="login-err" class="hidden mt-3 bg-red-900/40 border border-red-800 text-red-300 rounded-lg px-3 py-2 text-sm"></div>
+            <div id="login-err" class="hidden mt-3 bg-red-900/40 border border-red-800 text-red-300 rounded-lg px-3 py-2 text-sm" role="alert" aria-live="polite"></div>
             <button id="login-btn" onclick="doLogin()"
                 class="mt-4 w-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white rounded-xl py-3 text-sm font-semibold transition-colors">
                 Se connecter
@@ -84,32 +84,32 @@
     <header class="bg-slate-800/90 border-b border-slate-700 sticky top-0 z-20 backdrop-blur">
         <div class="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
             <div class="flex items-center gap-3 min-w-0">
-                <span class="text-xl select-none">💧</span>
-                <span class="font-bold text-white hidden sm:block">Waterflow 2</span>
+                <span class="text-xl select-none" aria-hidden="true">💧</span>
+                <h1 class="font-bold text-white hidden sm:block text-base m-0">Waterflow 2</h1>
                 <span id="hdr-badge" class="text-xs px-2 py-0.5 rounded-full font-medium shrink-0"></span>
                 <span id="hdr-user" class="text-sm text-slate-400 truncate"></span>
             </div>
             <!-- Expert tab nav -->
-            <nav id="expert-tabs" class="hidden flex gap-1">
-                <button onclick="showTab('dash')" data-tab="dash"
+            <nav id="expert-tabs" class="hidden flex gap-1" role="tablist" aria-label="Sections expert">
+                <button onclick="showTab('dash')" data-tab="dash" role="tab" aria-selected="false"
                     class="tab-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-colors">
-                    📊 Dashboard
+                    <span aria-hidden="true">📊</span> Dashboard
                 </button>
-                <button onclick="showTab('prevs')" data-tab="prevs"
+                <button onclick="showTab('prevs')" data-tab="prevs" role="tab" aria-selected="false"
                     class="tab-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-colors">
-                    🧪 Prélèvements
+                    <span aria-hidden="true">🧪</span> Prélèvements
                 </button>
-                <button onclick="showTab('clis')" data-tab="clis"
+                <button onclick="showTab('clis')" data-tab="clis" role="tab" aria-selected="false"
                     class="tab-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-colors">
-                    🏛 Clients
+                    <span aria-hidden="true">🏛</span> Clients
                 </button>
-                <button onclick="showTab('cliDash')" data-tab="cliDash"
+                <button onclick="showTab('cliDash')" data-tab="cliDash" role="tab" aria-selected="false"
                     class="tab-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-colors">
-                    📈 Par client
+                    <span aria-hidden="true">📈</span> Par client
                 </button>
-                <button onclick="showTab('api')" data-tab="api"
+                <button onclick="showTab('api')" data-tab="api" role="tab" aria-selected="false"
                     class="tab-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-colors">
-                    🔌 API
+                    <span aria-hidden="true">🔌</span> API
                 </button>
             </nav>
             <div class="flex items-center gap-3 shrink-0">
@@ -156,7 +156,7 @@
                         class="mt-4 w-full bg-blue-600 hover:bg-blue-500 text-white rounded-xl py-2.5 text-sm font-semibold transition-colors">
                         Analyser
                     </button>
-                    <div id="manual-res" class="hidden mt-4 rounded-xl p-4 text-center"></div>
+                    <div id="manual-res" class="hidden mt-4 rounded-xl p-4 text-center" role="status" aria-live="polite"></div>
                 </div>
 
                 <!-- OCR Upload -->
@@ -170,7 +170,7 @@
                     </label>
                     <input id="ocr-inp" type="file" class="hidden" accept=".pdf,.png,.jpg,.jpeg"
                         onchange="submitOcr(this)">
-                    <div id="ocr-res" class="hidden mt-4 rounded-xl p-3 text-sm"></div>
+                    <div id="ocr-res" class="hidden mt-4 rounded-xl p-3 text-sm" role="status" aria-live="polite"></div>
                 </div>
             </div>
 
@@ -180,7 +180,7 @@
                     <h2 class="font-semibold text-white">Mes prélèvements récents</h2>
                     <button onclick="loadClientPrevs()" class="text-xs text-blue-400 hover:underline">Actualiser</button>
                 </div>
-                <div id="c-prevs"></div>
+                <div id="c-prevs" aria-live="polite"></div>
             </div>
         </div>
 
@@ -188,7 +188,7 @@
         <div id="vw-expert" class="hidden">
 
             <!-- Tab: Dashboard -->
-            <div id="tab-dash" class="hidden">
+            <div id="tab-dash" class="hidden" role="tabpanel" aria-label="Dashboard">
                 <div class="grid grid-cols-4 gap-4 mb-6">
                     <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 fade-in">
                         <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Prélèvements</p>
@@ -220,18 +220,18 @@
             </div>
 
             <!-- Tab: Prélèvements -->
-            <div id="tab-prevs" class="hidden">
+            <div id="tab-prevs" class="hidden" role="tabpanel" aria-label="Prélèvements">
                 <!-- Filter bar -->
                 <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 mb-4 fade-in">
                     <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
                         <div>
-                            <label class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Client</label>
+                            <label for="f-client" class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Client</label>
                             <input id="f-client" type="text" placeholder="COMM-042…"
                                 class="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
                                 onkeydown="if(event.key==='Enter')loadAllPrevs()">
                         </div>
                         <div>
-                            <label class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Source</label>
+                            <label for="f-source" class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Source</label>
                             <select id="f-source"
                                 class="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors">
                                 <option value="">Toutes</option>
@@ -240,7 +240,7 @@
                             </select>
                         </div>
                         <div>
-                            <label class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Résultat</label>
+                            <label for="f-potable" class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Résultat</label>
                             <select id="f-potable"
                                 class="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors">
                                 <option value="">Tous</option>
@@ -249,12 +249,12 @@
                             </select>
                         </div>
                         <div>
-                            <label class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Date début</label>
+                            <label for="f-date-from" class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Date début</label>
                             <input id="f-date-from" type="date"
                                 class="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors [color-scheme:dark]">
                         </div>
                         <div>
-                            <label class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Date fin</label>
+                            <label for="f-date-to" class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Date fin</label>
                             <input id="f-date-to" type="date"
                                 class="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors [color-scheme:dark]">
                         </div>
@@ -272,36 +272,36 @@
                     </div>
                 </div>
                 <div class="bg-slate-800 border border-slate-700 rounded-2xl fade-in">
-                    <div id="e-prevs"></div>
+                    <div id="e-prevs" aria-live="polite"></div>
                 </div>
             </div>
 
             <!-- Tab: Clients -->
-            <div id="tab-clis" class="hidden">
+            <div id="tab-clis" class="hidden" role="tabpanel" aria-label="Clients">
                 <div class="grid grid-cols-3 gap-4">
                     <div class="col-span-2 bg-slate-800 border border-slate-700 rounded-2xl fade-in">
                         <div class="px-6 py-4 border-b border-slate-700 flex items-center justify-between">
                             <h2 class="font-semibold text-white">Comptes clients</h2>
                             <button onclick="loadClients()" class="text-xs text-blue-400 hover:underline">Actualiser</button>
                         </div>
-                        <div id="clis-list"></div>
+                        <div id="clis-list" aria-live="polite"></div>
                     </div>
                     <!-- Create client -->
                     <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 h-fit fade-in">
                         <h2 class="font-semibold text-white mb-4">➕ Nouveau client</h2>
                         <div class="space-y-3">
                             <div>
-                                <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Identifiant métier</label>
+                                <label for="nc-id" class="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Identifiant métier</label>
                                 <input id="nc-id" type="text" placeholder="COMM-042"
                                     class="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors">
                             </div>
                             <div>
-                                <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Dénomination</label>
+                                <label for="nc-den" class="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Dénomination</label>
                                 <input id="nc-den" type="text" placeholder="Commune de Bordeaux"
                                     class="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors">
                             </div>
                             <div>
-                                <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Adresse</label>
+                                <label for="nc-adr" class="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Adresse</label>
                                 <input id="nc-adr" type="text" placeholder="1 Place de la Mairie…"
                                     class="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors">
                             </div>
@@ -310,12 +310,12 @@
                             class="mt-4 w-full bg-blue-600 hover:bg-blue-500 text-white rounded-xl py-2.5 text-sm font-semibold transition-colors">
                             Créer le compte
                         </button>
-                        <div id="nc-res" class="hidden mt-3 text-xs rounded-lg px-3 py-2"></div>
+                        <div id="nc-res" class="hidden mt-3 text-xs rounded-lg px-3 py-2" role="status" aria-live="polite"></div>
                     </div>
                 </div>
             </div>
             <!-- Tab: Dashboard par client -->
-            <div id="tab-cliDash" class="hidden fade-in">
+            <div id="tab-cliDash" class="hidden fade-in" role="tabpanel" aria-label="Par client">
                 <div class="grid grid-cols-4 gap-4 h-full" style="min-height:70vh">
 
                     <!-- Liste clients -->
@@ -327,7 +327,7 @@
                         <input id="cd-search" type="text" placeholder="Rechercher…"
                             oninput="filterCliList(this.value)"
                             class="mx-3 mt-3 mb-2 bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors">
-                        <div id="cd-list" class="flex-1 overflow-y-auto"></div>
+                        <div id="cd-list" class="flex-1 overflow-y-auto" aria-live="polite"></div>
                     </div>
 
                     <!-- Dashboard individuel -->
@@ -393,7 +393,7 @@
                                     <div class="px-5 py-3 border-b border-slate-700 flex items-center justify-between">
                                         <span class="text-sm font-semibold text-white">Derniers prélèvements</span>
                                     </div>
-                                    <div id="cd-prevs"></div>
+                                    <div id="cd-prevs" aria-live="polite"></div>
                                 </div>
                             </div>
                         </div>
@@ -402,14 +402,14 @@
             </div>
 
             <!-- Tab: API Explorer -->
-            <div id="tab-api" class="hidden fade-in">
+            <div id="tab-api" class="hidden fade-in" role="tabpanel" aria-label="API Explorer">
                 <div class="flex items-center gap-3 mb-5">
                     <input id="api-search" type="text" placeholder="Filtrer les routes…"
                         oninput="filterApiRoutes(this.value)"
                         class="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors">
                     <span id="api-spec-ver" class="text-xs text-slate-600 shrink-0"></span>
                 </div>
-                <div id="api-endpoints" class="space-y-6"></div>
+                <div id="api-endpoints" class="space-y-6" aria-live="polite"></div>
             </div>
 
         </div>
@@ -547,6 +547,7 @@ function showTab(tab) {
         b.className = `tab-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
             active ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
         }`;
+        b.setAttribute('aria-selected', active ? 'true' : 'false');
     });
     if (tab === 'dash')  loadDashboard();
     if (tab === 'prevs') loadAllPrevs();
@@ -640,10 +641,11 @@ const FIELDS = [
 function buildManualForm() {
     document.getElementById('manual-fields').innerHTML = FIELDS.map(f => `
         <div>
-            <label class="text-xs font-semibold text-slate-500 block mb-1">${f.l}</label>
+            <label for="mf-${f.k}" class="text-xs font-semibold text-slate-500 block mb-1">${f.l}</label>
             <input id="mf-${f.k}" type="number" step="any" placeholder="${f.ph}"
+                ${f.hint ? `aria-describedby="mf-hint-${f.k}"` : ''}
                 class="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors">
-            ${f.hint ? `<p class="text-[10px] text-slate-600 mt-0.5">${f.hint}</p>` : ''}
+            ${f.hint ? `<p id="mf-hint-${f.k}" class="text-[10px] text-slate-600 mt-0.5">${f.hint}</p>` : ''}
         </div>
     `).join('');
 }
@@ -943,7 +945,9 @@ function renderCliList(clients) {
     el.innerHTML = clients.map(c => `
         <div class="cd-cli-row px-4 py-3 cursor-pointer border-b border-slate-700/40 last:border-0 hover:bg-slate-700/40 transition-colors flex items-center gap-3"
              data-id="${c.id}" data-label="${c.denomination}"
-             onclick="selectClient('${c.id}')">
+             role="button" tabindex="0"
+             onclick="selectClient('${c.id}')"
+             onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectClient('${c.id}')}">
             <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shrink-0
                 ${c.actif ? 'bg-blue-900/60 text-blue-300' : 'bg-slate-700 text-slate-500'}">
                 ${(c.denomination||'?')[0].toUpperCase()}
@@ -1098,7 +1102,10 @@ function renderEndpointCard({ path, method, op }, spec) {
     }
     return `
     <div class="api-card bg-slate-800 border border-slate-700 rounded-xl overflow-hidden" id="${id}">
-        <div onclick="toggleApiEp('${id}')" class="px-4 py-3 flex items-center gap-3 cursor-pointer hover:bg-slate-700/40 transition-colors select-none">
+        <div onclick="toggleApiEp('${id}')"
+             onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleApiEp('${id}')}"
+             role="button" tabindex="0"
+             class="px-4 py-3 flex items-center gap-3 cursor-pointer hover:bg-slate-700/40 transition-colors select-none">
             <span class="shrink-0 text-[10px] font-bold font-mono uppercase text-white text-center w-16 py-0.5 rounded ${_MC[method]||'bg-slate-600'}">${method}</span>
             <span class="font-mono text-sm text-slate-200 flex-1 truncate">${path}</span>
             <span class="text-slate-500 text-xs hidden md:block shrink-0 truncate max-w-xs">${op.summary||''}</span>
@@ -1111,7 +1118,7 @@ function renderEndpointCard({ path, method, op }, spec) {
                 <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-2">Paramètres de chemin</p>
                 <div class="space-y-2">${pathPs.map(p => `
                     <div class="flex items-center gap-3">
-                        <label class="font-mono text-xs text-yellow-300 w-32 shrink-0">{${p.name}}</label>
+                        <label for="${id}__pp__${p.name}" class="font-mono text-xs text-yellow-300 w-32 shrink-0">{${p.name}}</label>
                         <input id="${id}__pp__${p.name}" type="text" placeholder="${p.description||p.name}"
                             class="flex-1 bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 font-mono transition-colors">
                     </div>`).join('')}
@@ -1122,7 +1129,7 @@ function renderEndpointCard({ path, method, op }, spec) {
                 <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-2">Paramètres de requête</p>
                 <div class="grid grid-cols-2 gap-2">${queryPs.map(p => `
                     <div>
-                        <label class="text-[10px] font-mono text-slate-500 block mb-1">${p.name}${p.required?' <span class="text-red-400">*</span>':''}</label>
+                        <label for="${id}__qp__${p.name}" class="text-[10px] font-mono text-slate-500 block mb-1">${p.name}${p.required?' <span class="text-red-400">*</span>':''}</label>
                         <input id="${id}__qp__${p.name}" type="text" placeholder="${p.description||''}"
                             class="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 font-mono transition-colors">
                     </div>`).join('')}
@@ -1141,7 +1148,7 @@ function renderEndpointCard({ path, method, op }, spec) {
                 </button>
                 <span class="text-xs text-slate-600">Auth injectée depuis la session</span>
             </div>
-            <div id="${id}__res" class="hidden"></div>
+            <div id="${id}__res" class="hidden" aria-live="polite"></div>
         </div>
     </div>`;
 }
