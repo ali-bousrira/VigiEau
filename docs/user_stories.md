@@ -1,4 +1,4 @@
-# User Stories — Waterflow 2
+# User Stories — VigiEau
 
 ## Profils utilisateurs
 

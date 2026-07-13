@@ -1,4 +1,4 @@
-# Note RGPD — Waterflow 2
+# Note RGPD — VigiEau
 
 ## Données considérées comme personnelles
 

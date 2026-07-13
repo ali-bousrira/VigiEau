@@ -28,7 +28,7 @@ Paramètres microbiologiques :
   Fer total                 :   0,08 mg/L
   Manganèse                 :   0,01 mg/L
 
-Paramètres retenus pour l'analyse MLOps (modèle Waterflow) :
+Paramètres retenus pour l'analyse MLOps (modèle VigiEau) :
   pH                        :   7,6
   Hardness (dureté)         : 182,3 mg/L CaCO3
   Solids (solides dissous)  : 18 450 mg/L

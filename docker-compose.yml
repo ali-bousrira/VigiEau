@@ -1,13 +1,13 @@
 version: "3.9"
 
 services:
-  waterflow2:
+  vigieau:
     build: .
     ports:
       - "8080:8080"
     environment:
       # ── Obligatoires ───────────────────────────────────────────
-      - DATABASE_URL=sqlite:////data/waterflow2.db
+      - DATABASE_URL=sqlite:////data/vigieau.db
       - MLFLOW_TRACKING_URI=sqlite:////data/mlflow_water.db
       - MLFLOW_URI=${MLFLOW_URI:-models:/WaterQualityXGBoost/1}
       - SCALER_PATH=/app/model_artifacts/robust_scaler.pkl
@@ -18,7 +18,7 @@ services:
       - MAX_UPLOAD_MB=20
       - FLASK_ENV=production
     volumes:
-      - waterflow_data:/data
+      - vigieau_data:/data
       - ./model_artifacts:/app/model_artifacts:ro
     restart: unless-stopped
     healthcheck:
@@ -28,4 +28,4 @@ services:
       retries: 3
 
 volumes:
-  waterflow_data:
+  vigieau_data:

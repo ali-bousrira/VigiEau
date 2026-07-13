@@ -1,7 +1,7 @@
 # Samples — Fiches laboratoire anonymisées
 
 Ce dossier contient des exemples de fiches de prélèvement à utiliser
-pour tester le pipeline OCR de la plateforme Waterflow 2.
+pour tester le pipeline OCR de la plateforme VigiEau.
 
 ## Fichiers disponibles
 

@@ -1,5 +1,5 @@
 """
-tests/test_non_regression.py — Tests de non-régression Waterflow 2
+tests/test_non_regression.py — Tests de non-régression VigiEau
 
 Garantit que les contrats d'API ne régressent pas entre les versions :
   - Chemins de routes stables

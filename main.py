@@ -1,5 +1,5 @@
 """
-main.py — Point d'entrée Waterflow 2
+main.py — Point d'entrée VigiEau
 Lance le serveur Flask ou Gunicorn selon l'environnement.
 """
 

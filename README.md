@@ -1,7 +1,7 @@
-# Waterflow 2 — Plateforme MLOps Qualité de l'Eau
+# VigiEau — Plateforme MLOps Qualité de l'Eau
 
-[![CI](https://github.com/helio-aubrun/waterflow/actions/workflows/ci.yml/badge.svg)](https://github.com/helio-aubrun/waterflow/actions/workflows/ci.yml)
-[![Model CI](https://github.com/helio-aubrun/waterflow/actions/workflows/model-ci.yml/badge.svg)](https://github.com/helio-aubrun/waterflow/actions/workflows/model-ci.yml)
+[![CI](https://github.com/helio-aubrun/vigieau/actions/workflows/ci.yml/badge.svg)](https://github.com/helio-aubrun/vigieau/actions/workflows/ci.yml)
+[![Model CI](https://github.com/helio-aubrun/vigieau/actions/workflows/model-ci.yml/badge.svg)](https://github.com/helio-aubrun/vigieau/actions/workflows/model-ci.yml)
 
 Plateforme de classification de la potabilité de l'eau destinée aux collectivités territoriales.
 Exposée via une **API Flask unique** portant trois modules : données, prédiction ML et ingestion OCR.
@@ -11,7 +11,7 @@ Exposée via une **API Flask unique** portant trois modules : données, prédict
 ## Architecture
 
 ```
-waterflow/
+vigieau/
 ├── api/                         # Re-exports (voir docs/architecture.md pour le détail)
 │   ├── app.py                  # Factory Flask (source canonique) + init Swagger
 │   ├── models/db.py            # Re-export de db.py (racine)
@@ -60,7 +60,7 @@ waterflow/
 ```bash
 # 1. Cloner le dépôt
 git clone <url-du-repo>
-cd waterflow
+cd vigieau
 
 # 2. Créer l'environnement virtuel
 python -m venv .venv
@@ -94,10 +94,10 @@ cp .env.example .env
 docker compose up -d
 
 # 3. Initialiser la base de données
-docker compose exec waterflow2 python scripts/init_db.py
+docker compose exec vigieau python scripts/init_db.py
 
 # Logs
-docker compose logs -f waterflow2
+docker compose logs -f vigieau
 ```
 
 ---
@@ -114,7 +114,7 @@ pytest tests/ -v --cov=api
 # Test bout en bout uniquement
 pytest tests/test_e2e.py -v
 
-# Tests d'intégration Waterflow 2
+# Tests d'intégration VigiEau
 pytest tests/test_api.py -v
 ```
 
@@ -173,7 +173,7 @@ Rôles : `analyste` (dashboards, prélèvements) | `exploit` (métriques, audit 
 
 | Variable            | Obligatoire | Défaut                              | Description                         |
 |---------------------|-------------|-------------------------------------|-------------------------------------|
-| `DATABASE_URL`      | non         | `sqlite:///waterflow2.db`           | URL SQLAlchemy (SQLite ou PostgreSQL) |
+| `DATABASE_URL`      | non         | `sqlite:///vigieau.db`              | URL SQLAlchemy (SQLite ou PostgreSQL) |
 | `MLFLOW_URI`        | non         | `models:/WaterQualityXGBoost/1`     | URI du modèle MLflow                |
 | `MLFLOW_TRACKING_URI` | non       | `sqlite:///mlflow_water.db`         | Backend MLflow                      |
 | `SCALER_PATH`       | non         | `model_artifacts/robust_scaler.pkl` | Chemin vers le RobustScaler         |

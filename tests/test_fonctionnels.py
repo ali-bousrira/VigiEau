@@ -1,5 +1,5 @@
 """
-tests/test_fonctionnels.py — Tests fonctionnels Waterflow 2
+tests/test_fonctionnels.py — Tests fonctionnels VigiEau
 
 Teste les parcours utilisateurs principaux de bout en bout :
   - Client : profil → dépôt de mesures → consultation des résultats

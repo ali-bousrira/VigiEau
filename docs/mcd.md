@@ -1,4 +1,4 @@
-# Modèle de données — Waterflow 2
+# Modèle de données — VigiEau
 
 ## MCD (Modèle Conceptuel de Données)
 

@@ -1,4 +1,4 @@
-name: Waterflow 2 — Model CI (MLOps)
+name: VigiEau — Model CI (MLOps)
 
 on:
   workflow_dispatch:

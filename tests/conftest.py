@@ -1,5 +1,5 @@
 """
-tests/conftest.py — Configuration pytest commune à tous les tests Waterflow 2.
+tests/conftest.py — Configuration pytest commune à tous les tests VigiEau.
 
 Responsabilités :
   1. Ajoute la racine du projet au sys.path (nécessaire pour `from api.* import ...`).

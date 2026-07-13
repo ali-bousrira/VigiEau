@@ -13,13 +13,13 @@ date: 2026-07-09
 > pour le plan qui a produit cet état, [[architecture]] pour le détail
 > technique.
 
-# État d'avancement — Waterflow 2 / RNCP 37827
+# État d'avancement — VigiEau / RNCP 37827
 
 ## Résumé exécutif
 
 Les **21 compétences** du référentiel RNCP 37827 (Développeur en
-Intelligence Artificielle) couvertes par Waterflow 2 sont **✅ toutes
-couvertes**. Les 3 lacunes identifiées lors du dernier audit croisé
+Intelligence Artificielle) couvertes par VigiEau (exercice pédagogique
+Waterflow 2) sont **✅ toutes couvertes**. Les 3 lacunes identifiées lors du dernier audit croisé
 (C1, C13, C14) ont été comblées et vérifiées en conditions réelles
 (appels API réels, entraînement réel, navigation clavier réelle dans un
 navigateur headless) — pas seulement relues sur le papier.

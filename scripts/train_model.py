@@ -255,7 +255,7 @@ def run_pipeline(args) -> int:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Entraîne, évalue et enregistre le modèle Waterflow (MLOps)")
+        description="Entraîne, évalue et enregistre le modèle VigiEau (MLOps)")
     parser.add_argument("--data", default="water_potability.csv")
     parser.add_argument("--min-roc-auc", type=float, default=0.82)
     parser.add_argument("--min-f1", type=float, default=0.65)
@@ -266,7 +266,7 @@ def main():
     args = parser.parse_args()
 
     print("═" * 60)
-    print("  Waterflow 2 — Entraînement du modèle")
+    print("  VigiEau — Entraînement du modèle")
     print("═" * 60)
 
     exit_code = run_pipeline(args)

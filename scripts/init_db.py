@@ -208,7 +208,7 @@ def seed(db):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Initialise la base Waterflow 2")
+    parser = argparse.ArgumentParser(description="Initialise la base VigiEau")
     parser.add_argument("--init-only", action="store_true",
                         help="Crée les tables sans insérer de données")
     parser.add_argument("--reset", action="store_true",
@@ -216,7 +216,7 @@ def main():
     args = parser.parse_args()
 
     print("═" * 60)
-    print("  Waterflow 2 — Initialisation base de données")
+    print("  VigiEau — Initialisation base de données")
     print("═" * 60)
 
     if args.reset:

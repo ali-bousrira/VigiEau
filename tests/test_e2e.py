@@ -1,5 +1,5 @@
 """
-tests/test_e2e.py — Test de bout en bout Waterflow 2
+tests/test_e2e.py — Test de bout en bout VigiEau
 
 Pipeline testé :
     Fiche labo (image/PDF) → POST /ingest/ocr-and-predict

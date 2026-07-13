@@ -5,10 +5,10 @@ Source : Hub'Eau — Qualité de l'eau potable (résultats du contrôle sanitair
 des eaux distribuées), API publique gratuite, sans clé :
     https://hubeau.eaufrance.fr/api/v1/qualite_eau_potable/resultats_dis
 
-Correspondance entre les paramètres Hub'Eau et les 9 features Waterflow
+Correspondance entre les paramètres Hub'Eau et les 9 features VigiEau
 (vérifiée par appel réel sur la commune 75056 / Paris) :
 
-    code_parametre_se | feature Waterflow | fiabilité
+    code_parametre_se | feature VigiEau   | fiabilité
     ------------------|-------------------|----------------------------------
     PH                | ph                | directe
     CDT25             | Conductivity      | directe
@@ -62,7 +62,7 @@ FEATURES = [
     "Conductivity", "Organic_carbon", "Trihalomethanes", "Turbidity",
 ]
 
-# code_parametre_se Hub'Eau -> (feature Waterflow, fonction de conversion)
+# code_parametre_se Hub'Eau -> (feature VigiEau, fonction de conversion)
 PARAM_MAP = {
     "PH":     ("ph",              None),
     "CDT25":  ("Conductivity",    None),
@@ -216,7 +216,7 @@ def main():
     date_min = args.date_min or (datetime.utcnow() - timedelta(days=365)).strftime("%Y-%m-%d")
 
     print("═" * 60)
-    print("  Waterflow 2 — Import Hub'Eau")
+    print("  VigiEau — Import Hub'Eau")
     print("═" * 60)
     print(f"  Commune : {args.commune}  |  Période : {date_min} → {date_max}")
 

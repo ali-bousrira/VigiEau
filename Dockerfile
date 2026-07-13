@@ -18,8 +18,8 @@ COPY . .
 RUN mkdir -p model_artifacts
 
 # Utilisateur non-root
-RUN useradd -m -u 1000 waterflow && chown -R waterflow /app
-USER waterflow
+RUN useradd -m -u 1000 vigieau && chown -R vigieau /app
+USER vigieau
 
 EXPOSE 8080
 

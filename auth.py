@@ -1,5 +1,5 @@
 """
-api/middleware/auth.py — Authentification Waterflow 2
+api/middleware/auth.py — Authentification VigiEau
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  MONDE 1 — CLIENTS (collectivités)

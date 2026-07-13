@@ -1,5 +1,5 @@
 """
-api/models/db.py — Modèles SQLAlchemy conformes RGPD — Waterflow 2
+api/models/db.py — Modèles SQLAlchemy conformes RGPD — VigiEau
 
 Deux mondes d'authentification séparés :
   ┌─────────────────────────────────────────────────────────────┐
@@ -34,7 +34,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import DeclarativeBase, relationship, sessionmaker
 import enum
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///waterflow2.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///vigieau.db")
 
 engine = create_engine(
     DATABASE_URL,

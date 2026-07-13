@@ -1,4 +1,4 @@
-# Plan de travail — Certification RNCP 37827 (Waterflow 2)
+# Plan de travail — Certification RNCP 37827 (VigiEau)
 
 > Établi le 2026-07-08. Croise la matrice de conformité Notion *"Conformité
 > RNCP 37827 — Waterflow 2"* (21 compétences, lue le 2026-07-08, dernière

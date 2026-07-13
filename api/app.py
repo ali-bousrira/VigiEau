@@ -1,5 +1,5 @@
 """
-api/app.py — Factory Flask Waterflow 2
+api/app.py — Factory Flask VigiEau
 """
 
 import os

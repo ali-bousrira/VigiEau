@@ -1,4 +1,4 @@
-# Wireframes — Parcours experts (Waterflow 2)
+# Wireframes — Parcours experts (VigiEau)
 
 Descriptions textuelles structurées des parcours experts dans l'interface
 web (`templates/index.html`), une seule application pour les deux rôles
@@ -18,7 +18,7 @@ avec la séquence d'écrans et les points d'attention clavier/RGAA.
 └───────────────────────────────┬────────────────────────────────────┘
                                  ▼
 ┌──────────────────────────────────────────────────────────────────┐
-│ En-tête : 💧 Waterflow 2 (h1) · badge rôle · statut API           │
+│ En-tête : 💧 VigiEau (h1) · badge rôle · statut API               │
 │ Onglets (role="tablist") :  [📊 Dashboard*][🧪 Prélèvements]      │
 │                              [🏛 Clients][📈 Par client][🔌 API]   │
 │  * onglet actif → aria-selected="true"                            │

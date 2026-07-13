@@ -1,4 +1,4 @@
-# Chaîne CI/CD du modèle (MLOps) — Waterflow 2
+# Chaîne CI/CD du modèle (MLOps) — VigiEau
 
 Documente la compétence RNCP **C13** : automatisation de la chaîne
 validation → entraînement → évaluation → packaging → (dé)ploiement du

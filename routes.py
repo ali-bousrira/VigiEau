@@ -1,5 +1,5 @@
 """
-api/routes/routes.py — Routes Waterflow 2
+api/routes/routes.py — Routes VigiEau
 
 Deux mondes d'authentification, périmètres strictement séparés :
 
@@ -315,7 +315,7 @@ def me_rgpd():
             "rectification": "Contactez un administrateur pour modifier dénomination ou adresse.",
             "effacement":  "Envoyez DELETE /me/rgpd pour anonymiser votre compte (irréversible).",
             "portabilite": "Vos prélèvements sont accessibles via GET /me/prelevements.",
-            "contact_dpo": "dpo@waterflow.example.com",
+            "contact_dpo": "dpo@vigieau.example.com",
         },
     })
 

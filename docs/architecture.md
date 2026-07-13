@@ -1,4 +1,4 @@
-# Architecture technique — Waterflow 2
+# Architecture technique — VigiEau
 
 > Vue d'ensemble technique du dépôt. Pour le détail des données voir
 > [[mcd]], pour la protection des données [[rgpd]], pour le pipeline
@@ -7,7 +7,7 @@
 
 ## Vue d'ensemble
 
-Waterflow 2 est une plateforme centralisée exposée via **une seule API
+VigiEau est une plateforme centralisée exposée via **une seule API
 Flask** qui porte trois responsabilités (Data, Prédiction, OCR), adossée à
 une base relationnelle conforme RGPD et à un pipeline MLOps qui entraîne,
 valide et enregistre le modèle XGBoost séparément de l'application.
@@ -172,8 +172,8 @@ Deux workflows GitHub Actions séparés, déclencheurs différents :
 `Dockerfile` : image `python:3.11-slim`, utilisateur non-root, `gunicorn`
 (2 workers) sur le port 8080, healthcheck sur `/health`.
 
-`docker-compose.yml` : un seul service, volume persistant `waterflow_data`
-pour les bases SQLite (`DATABASE_URL=sqlite:////data/waterflow2.db`,
+`docker-compose.yml` : un seul service, volume persistant `vigieau_data`
+pour les bases SQLite (`DATABASE_URL=sqlite:////data/vigieau.db`,
 `MLFLOW_TRACKING_URI=sqlite:////data/mlflow_water.db`), `model_artifacts/`
 monté en lecture seule. **Limite connue** : pas de service PostgreSQL dans
 le compose bien que `DATABASE_URL` l'accepte — SQLite en prod à ce stade

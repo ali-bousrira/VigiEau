@@ -1,5 +1,5 @@
 """
-tests/test_api.py — Tests d'intégration Waterflow 2
+tests/test_api.py — Tests d'intégration VigiEau
 
 Architecture testée :
   - Clients     : X-API-Key → /me, /ingest/*, /me/prelevements, /me/resultats
