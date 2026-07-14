@@ -24,7 +24,12 @@ os.environ.setdefault("MLFLOW_URI",        "mock")
 os.environ.setdefault("SCALER_PATH",       "mock")
 os.environ.setdefault("OCR_SPACE_API_KEY", "")
 os.environ.setdefault("ANTHROPIC_API_KEY", "")
-os.environ["EXPERT_TOKENS"] = "admin:token-admin-e2e:exploit"
+# EXPERT_TOKENS n'est pas fixé ici : tests/conftest.py le force avant toute
+# collection de test ("alice:token-alice:analyste,bob:token-bob:exploit") et
+# auth.py ne le relit qu'une seule fois, au premier import — quel que soit le
+# fichier de test qui importe auth.py en premier. Un os.environ[...] = ...
+# local ici serait sans effet la plupart du temps. On réutilise donc le
+# token exploit partagé (token-bob) plutôt que d'en définir un local.
 
 # ── OCR simulé — résultat d'une fiche labo correctement extraite ─────────────
 MOCK_OCR_RESULT = {
@@ -55,22 +60,23 @@ _mock_model.predict_proba.return_value = np.array([[0.14, 0.86]])
 _mock_scaler = MagicMock()
 _mock_scaler.transform.side_effect = lambda x: x
 
-ADMIN_HEADER = {"Authorization": "Bearer token-admin-e2e"}
+ADMIN_HEADER = {"Authorization": "Bearer token-bob"}   # rôle exploit, partagé via conftest.py
 
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
 @pytest.fixture(scope="module")
 def app():
-    with patch("mlflow.xgboost.load_model", return_value=_mock_model), \
-         patch("joblib.load",               return_value=_mock_scaler), \
-         patch("mlflow.set_tracking_uri"):
-        from api.app       import create_app
-        from api.models.db import init_db
-        application = create_app()
-        application.config["TESTING"] = True
-        init_db()
-        return application
+    import predict_service
+    from api.app       import create_app
+    from api.models.db import init_db
+    predict_service._model         = _mock_model
+    predict_service._scaler        = _mock_scaler
+    predict_service._model_version = "mock"
+    application = create_app()
+    application.config["TESTING"] = True
+    init_db()
+    return application
 
 
 @pytest.fixture(scope="module")
@@ -109,9 +115,16 @@ class TestE2EPipelineOcrPredict:
 
     @pytest.fixture(autouse=True)
     def patch_ocr(self):
-        """Remplace l'appel OCR réel par le résultat simulé."""
+        """Remplace l'appel OCR réel par le résultat simulé.
+
+        Patché sur routes.extract_from_document (là où routes.py l'appelle),
+        pas sur api.services.ocr_service : routes.py fait
+        `from api.services.ocr_service import extract_from_document`, ce qui
+        lie son propre nom local au moment de l'import — patcher l'attribut
+        du module source n'a alors aucun effet sur l'appel réel.
+        """
         with patch(
-            "api.services.ocr_service.extract_from_document",
+            "routes.extract_from_document",
             return_value=MOCK_OCR_RESULT,
         ):
             yield
@@ -225,7 +238,7 @@ class TestE2EPipelineOcrPredict:
         """Si l'OCR ne retourne pas toutes les mesures, prediction_possible=False."""
         ocr_partiel = {**MOCK_OCR_RESULT, "mesures": {"ph": 7.0}}  # mesures incomplètes
         with patch(
-            "api.services.ocr_service.extract_from_document",
+            "routes.extract_from_document",
             return_value=ocr_partiel,
         ):
             r = http.post(

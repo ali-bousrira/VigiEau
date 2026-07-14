@@ -27,9 +27,10 @@ navigateur headless) — pas seulement relues sur le papier.
 Sur les **5 livrables de certification** attendus (rapports professionnels
 E1/E3/E4, documentation technique E2/E5), **1 est rédigé** (E2).
 
-La suite de tests compte **189 tests passants** ; les 9 échecs restants
-(`tests/test_e2e.py`) sont un problème préexistant, non lié aux travaux de
-cette session (diagnostic en attente, voir §5).
+La suite de tests compte **198 tests passants, 0 échec**. Les 9 échecs
+autrefois signalés comme "préexistants" dans `tests/test_e2e.py` ont été
+diagnostiqués et corrigés (voir §5) : c'étaient en réalité 3 bugs distincts
+empilés dans le fichier de test lui-même, pas dans l'application.
 
 ---
 
@@ -124,11 +125,31 @@ plan et des sources par document : [[plan_certification_rncp]].
 
 ## 5. État technique et limites connues
 
-- **Tests** : 189 passants. 9 échecs dans `tests/test_e2e.py`
-  ("Token expert invalide ou absent") — confirmés **préexistants** avant
-  cette session (vérifié en stashant les modifications et en relançant
-  sur `HEAD` d'origine) et non liés aux travaux effectués ici ; cause
-  encore à diagnostiquer.
+- **Tests** : 198 passants, 0 échec. Les 9 échecs de `tests/test_e2e.py`
+  étaient **3 bugs distincts empilés** dans le fichier de test, masqués
+  les uns par les autres :
+  1. `EXPERT_TOKENS` — `auth.py` ne lit cette variable qu'une seule fois,
+     au premier import. `test_api.py` (collecté avant `test_e2e.py` par
+     ordre alphabétique) l'important en premier, le
+     `os.environ["EXPERT_TOKENS"] = "admin:token-admin-e2e:exploit"` de
+     `test_e2e.py` n'avait aucun effet en suite complète → 401 "Token
+     expert invalide" dès la fixture de setup.
+  2. Le mock OCR patchait `api.services.ocr_service.extract_from_document`
+     (le module de re-export), alors que `routes.py` avait déjà fait
+     `from api.services.ocr_service import extract_from_document` — son
+     propre nom local, jamais atteint par ce patch → l'extraction OCR
+     réelle s'exécutait et échouait (503, aucune clé configurée). Invisible
+     tant que le bug 1 bloquait avant d'y arriver.
+  3. Le fixture `app` patchait `mlflow.xgboost.load_model`/`joblib.load`
+     *pendant l'import*, mais `predict_service.py` charge le modèle
+     paresseusement (au premier appel, pas à l'import) depuis la
+     refonte C13 — même classe de bug déjà corrigée dans les 3 autres
+     fichiers de test cette session, mais explicitement laissée de côté
+     ici faute de pouvoir la vérifier tant que le bug 1 masquait tout.
+  Correction : `token-bob` (rôle exploit déjà partagé via `conftest.py`)
+  au lieu d'un token local ; patch déplacé sur `routes.extract_from_document`
+  ; assignation directe de `predict_service._model`/`_scaler`, comme dans
+  les autres fichiers de test.
 - **Base de données** : SQLite en développement comme en production
   Docker ; `DATABASE_URL` accepte PostgreSQL mais aucun service dédié
   n'est déclaré dans `docker-compose.yml` (voir README, section Limites).
