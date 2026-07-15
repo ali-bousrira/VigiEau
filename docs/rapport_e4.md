@@ -1,0 +1,117 @@
+---
+type: rapport-professionnel
+epreuve: E4
+bloc: 3
+competences: [C14, C15, C16, C17, C18, C19]
+---
+
+> Brouillon généré à partir du code réel du dépôt. Structure imposée
+> (contexte, démarche, choix techniques, résultats, difficultés
+> rencontrées) — **la voix reste à retravailler** avant dépôt, en
+> particulier §5.
+
+# Rapport professionnel — E4 : Application
+
+## 1. Contexte
+
+Trois profils très différents doivent utiliser la même plateforme sans se
+marcher dessus : un client final qui dépose des mesures et consulte ses
+propres résultats, un analyste qualité qui a une vue globale, un
+responsable d'exploitation qui supervise l'infrastructure — tous via une
+**seule interface web**, cohérente avec l'API unique décrite dans
+[[architecture]]. L'enjeu du Bloc 3 (volet application) est de livrer une
+application réellement utilisable — accessible, conteneurisée, testée en
+continu — pas seulement une API qui répond correctement aux tests.
+
+## 2. Démarche
+
+### 2.1 Spécification avant code
+
+Les parcours ont été formalisés avant/à côté de l'implémentation : 10
+user stories avec critères d'acceptation ([[user_stories]]), et des
+wireframes textuels des 3 parcours experts ([[wireframes]]) décrivant
+l'enchaînement des écrans et les points d'attention clavier. Cette session,
+chaque user story a reçu un critère d'accessibilité RGAA explicite, ancré
+sur un élément réel de l'interface plutôt que générique.
+
+### 2.2 Interface unique, un seul fichier
+
+`templates/index.html` est une SPA en JavaScript natif (pas de framework)
+servie directement par Flask — cohérent avec le choix "API unique" du
+projet plutôt que deux services séparés à déployer et versionner
+ensemble. Le rôle de l'utilisateur connecté (`client`/`analyste`/`exploit`)
+détermine dynamiquement les onglets visibles et les actions permises.
+
+### 2.3 Audit d'accessibilité réel
+
+Plutôt que d'écrire des critères RGAA "sur le papier", j'ai fait auditer
+le HTML réellement servi : résultat, aucun `<label>` n'était lié à son
+input sauf un, deux éléments cliquables (`<div onclick>`) étaient
+totalement inutilisables au clavier, aucune zone `aria-live` n'existait
+pour les messages dynamiques, et la navigation par onglets n'avait aucun
+rôle ARIA. Correctifs appliqués et **vérifiés en conditions réelles** :
+navigateur headless piloté au clavier (Tab + Entrée déplie effectivement
+une carte de l'explorateur d'API), pas seulement relecture du diff.
+
+### 2.4 Conteneurisation et CI/CD applicative
+
+`Dockerfile` (image `python:3.11-slim`, utilisateur non-root, healthcheck
+sur `/health`) + `docker-compose.yml` (volume persistant, restart policy).
+`.github/workflows/ci.yml` : lint (`ruff`) → `pytest tests/` avec
+couverture → build et publication de l'image (GHCR) → déploiement SSH
+(conditionné à des secrets non disponibles dans cet environnement de
+développement, donc non exécuté ici).
+
+## 3. Choix techniques
+
+- **JS natif plutôt qu'un framework front** : une seule page, pas de
+  besoin de gestion d'état complexe ni de build step supplémentaire à
+  maintenir en plus de l'API Flask.
+- **Rôles ARIA additifs, aucun changement visuel** : tous les correctifs
+  d'accessibilité (`role`, `aria-live`, `aria-selected`, `tabindex`) ont
+  été ajoutés sans toucher au CSS existant — réduit le risque de
+  régression visuelle sur une interface déjà en place.
+- **Utilisateur Linux non-root dans le conteneur** : bonne pratique de
+  sécurité de base, coût de mise en œuvre minimal.
+- **CI applicative séparée de la CI modèle** (voir [[rapport_e3]]) :
+  déclencheurs et finalités différents.
+
+## 4. Résultats
+
+- 10 critères d'acceptation RGAA ajoutés (un par user story), tous
+  vérifiables sur un élément réel de l'interface.
+- Correctifs d'accessibilité vérifiés par navigation clavier réelle
+  (Playwright, pas une relecture statique) : aucune régression visuelle,
+  captures d'écran comparées avant/après.
+- Nouvel onglet "Audit" dans l'interface exploit, consommant un endpoint
+  déjà fonctionnel côté API mais jusque-là sans vue dédiée.
+- Dropdown client dans le filtre Prélèvements (remplace un champ texte
+  libre exigeant l'identifiant exact).
+- CI applicative fonctionnelle en local (lint + 198 tests), non encore
+  vérifiée sur un vrai runner GitHub Actions au moment de la rédaction
+  (voir §5).
+
+## 5. Difficultés rencontrées
+
+**Corriger un piège clavier peut en révéler un autre.** En ajoutant
+l'onglet "Audit" réservé au rôle `exploit`, j'ai découvert que la fonction
+qui recalcule le style des boutons d'onglet à chaque clic
+(`showTab()`) écrasait la classe `hidden` que je venais de poser sur ce
+nouvel onglet — un analyste aurait vu apparaître l'onglet Audit dès son
+premier changement d'onglet, malgré la restriction de rôle censée le
+cacher. Un correctif d'accessibilité et une nouvelle fonctionnalité
+peuvent interagir de façons non évidentes ; je ne l'ai vu qu'en testant
+le scénario "connexion analyste" après coup, pas en relisant le code.
+
+**Je n'ai jamais vu la CI applicative tourner pour de vrai.** Le
+`ci.yml` et le `model-ci.yml` sont validés syntaxiquement et j'ai relu
+leur logique avec soin, mais aucun des deux n'a encore été exécuté sur un
+vrai runner GitHub Actions au moment de la rédaction de ce rapport (rien
+n'a encore été poussé). C'est une limite honnête à assumer : "je pense que
+ça marche" n'est pas la même chose que "je l'ai vu tourner".
+
+**La bascule SQLite → PostgreSQL reste à finir, pas juste à documenter.**
+`DATABASE_URL` accepte déjà une URL PostgreSQL côté code, mais
+`docker-compose.yml` ne déclare aucun service PostgreSQL — j'ai choisi de
+documenter clairement cette limite (README) plutôt que d'ajouter un
+service non testé juste pour cocher une case.
