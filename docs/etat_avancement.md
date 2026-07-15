@@ -24,8 +24,10 @@ Waterflow 2) sont **✅ toutes couvertes**. Les 3 lacunes identifiées lors du d
 (appels API réels, entraînement réel, navigation clavier réelle dans un
 navigateur headless) — pas seulement relues sur le papier.
 
-Sur les **5 livrables de certification** attendus (rapports professionnels
-E1/E3/E4, documentation technique E2/E5), **1 est rédigé** (E2).
+Les **5 livrables de certification** attendus (rapports professionnels
+E1/E3/E4, documentation technique E2/E5) sont **tous rédigés** — chacun
+un brouillon technique généré à partir du code réel, dont la voix (surtout
+les "difficultés rencontrées") reste à retravailler avant dépôt effectif.
 
 La suite de tests compte **198 tests passants, 0 échec**. Les 9 échecs
 autrefois signalés comme "préexistants" dans `tests/test_e2e.py` ont été
@@ -66,8 +68,22 @@ empilés dans le fichier de test lui-même, pas dans l'application.
 | `a7bd70d` | Dropdown client dans le filtre Prélèvements |
 | `7faefd9` | Badges CI, note SQLite/PostgreSQL, arborescence à jour dans le README |
 | `f9acbb1` | Documentation technique E2 (service OCR) |
+| `c575849` | Renommage complet Waterflow 2 → VigiEau (branding, CI/CD, Docker, docs) |
+| `9c2cc15` | 3 bugs empilés dans `test_e2e.py` corrigés — suite à 198 passed, 0 échec |
+| `1321193` | Documentation technique E5 (monitorage + incident) |
+| `131f327` | Correction de la dérive de `docs/incident.md` par rapport au code réel |
+| `5e237c6` | Rapport professionnel E1 (données) |
+| `e462ad6` | Rapport professionnel E3 (modèle en production) |
+| `81b4e4b` | Rapport professionnel E4 (application) |
 
-Tous les commits sont locaux, **aucun push** (consigne explicite).
+Historique réécrit séparément (hors table ci-dessus, opération distincte
+des livrables, déjà poussée) : les commits fondateurs attribués à un
+second contributeur ont été réattribués à la demande explicite
+d'ali-bousrira, et l'unique trailer de co-autorat Claude retiré —
+sauvegarde complète prise avant (bundle) et force-push confirmé
+explicitement avant exécution. **Les commits listés dans ce tableau, eux,
+restent locaux, non poussés**, comme le reste de la session (consigne
+explicite : aucun push sans demande directe).
 
 ### Bugs réels trouvés et corrigés en cours de route
 
@@ -94,10 +110,10 @@ concret avant d'être corrigé :
 | # | Document | Statut |
 |---|---|---|
 | E2 | `docs/doc_technique_e2.md` | ✅ rédigé |
-| E5 | `docs/doc_technique_e5.md` | ⏳ à rédiger (prochain) |
-| E1 | `docs/rapport_e1.md` | ⏳ à rédiger |
-| E3 | `docs/rapport_e3.md` | ⏳ à rédiger |
-| E4 | `docs/rapport_e4.md` | ⏳ à rédiger |
+| E5 | `docs/doc_technique_e5.md` | ✅ rédigé |
+| E1 | `docs/rapport_e1.md` | ✅ rédigé |
+| E3 | `docs/rapport_e3.md` | ✅ rédigé |
+| E4 | `docs/rapport_e4.md` | ✅ rédigé |
 
 Chaque document est un **brouillon technique** généré à partir du code
 réel — la voix (surtout "difficultés rencontrées") est à retravailler
@@ -120,6 +136,10 @@ plan et des sources par document : [[plan_certification_rncp]].
 | [[roadmap]] | Suivi des correctifs (P1–P4) |
 | [[plan_certification_rncp]] | Plan de travail vs. matrice de conformité |
 | `docs/doc_technique_e2.md` | Documentation technique E2 (service OCR) |
+| `docs/doc_technique_e5.md` | Documentation technique E5 (monitorage + incident) |
+| `docs/rapport_e1.md` | Rapport professionnel E1 (données) |
+| `docs/rapport_e3.md` | Rapport professionnel E3 (modèle en production) |
+| `docs/rapport_e4.md` | Rapport professionnel E4 (application) |
 
 ---
 
@@ -164,8 +184,18 @@ plan et des sources par document : [[plan_certification_rncp]].
 
 ---
 
-## 6. Prochaine étape proposée
+## 6. Prochaines étapes
 
-Rédiger les 4 documents de certification restants (E5 → E1 → E3 → E4, un
-à la fois, avec relecture entre chaque), conformément à
-[[plan_certification_rncp]] §"Ordre et rythme".
+Les 5 livrables sont rédigés mais restent des **brouillons techniques** —
+avant tout dépôt réel :
+
+1. Retravailler la voix de chaque rapport (E1/E3/E4 surtout) pour qu'elle
+   sonne comme un vécu personnel, pas un résumé de commits.
+2. Pousser les commits de cette session sur `origin/main` (actuellement
+   tous locaux) et vérifier que `ci.yml`/`model-ci.yml` passent
+   réellement sur un runner GitHub Actions — jamais exécutés à ce jour.
+3. Construire le support de soutenance (dernier livrable de la Phase 4 du
+   guide), une fois les rapports stabilisés.
+4. Optionnel : `docs/incident.md` a été recorrigé pour coller au code
+   réel — vérifier qu'aucune autre note du vault n'a la même dérive avant
+   la soutenance.
