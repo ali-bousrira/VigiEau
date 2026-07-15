@@ -1,7 +1,7 @@
 # VigiEau — Plateforme MLOps Qualité de l'Eau
 
-[![CI](https://github.com/helio-aubrun/vigieau/actions/workflows/ci.yml/badge.svg)](https://github.com/helio-aubrun/vigieau/actions/workflows/ci.yml)
-[![Model CI](https://github.com/helio-aubrun/vigieau/actions/workflows/model-ci.yml/badge.svg)](https://github.com/helio-aubrun/vigieau/actions/workflows/model-ci.yml)
+[![CI](https://github.com/ali-bousrira/VigiEau/actions/workflows/ci.yml/badge.svg)](https://github.com/ali-bousrira/VigiEau/actions/workflows/ci.yml)
+[![Model CI](https://github.com/ali-bousrira/VigiEau/actions/workflows/model-ci.yml/badge.svg)](https://github.com/ali-bousrira/VigiEau/actions/workflows/model-ci.yml)
 
 Plateforme de classification de la potabilité de l'eau destinée aux collectivités territoriales.
 Exposée via une **API Flask unique** portant trois modules : données, prédiction ML et ingestion OCR.

@@ -45,7 +45,7 @@ from sqlalchemy import func
 
 from api.models.db import (
     Client, Prelevement, Mesure, Prediction,
-    AuditLog, RequestMetric, IngestionSource, get_db, utcnow,
+    AuditLog, RequestMetric, IngestionSource, utcnow,
 )
 from api.middleware.auth import (
     require_client_key, require_expert, timed, log_audit,
@@ -899,7 +899,7 @@ def analyste_dashboard():
         "non_potable_count":   total_preds - potable_count,
         "potable_rate":        round(potable_count / total_preds, 4)
                                if total_preds else None,
-        "clients_actifs":      db.query(Client).filter(Client.actif == True).count(),
+        "clients_actifs":      db.query(Client).filter(Client.actif).count(),
         "sources": {
             (k.value if hasattr(k, "value") else str(k)): v
             for k, v in sources.items()
@@ -968,7 +968,7 @@ def exploitation_metrics():
         "routes":             summary,
         "sample_size":        len(rows),
         "clients_total":      db.query(Client).count(),
-        "clients_actifs":     db.query(Client).filter(Client.actif == True).count(),
+        "clients_actifs":     db.query(Client).filter(Client.actif).count(),
         "total_prelevements": db.query(Prelevement).count(),
         "total_predictions":  total_preds,
         "potable_rate":       round(potable_count / total_preds, 4)
@@ -1001,15 +1001,15 @@ def exploitation_audit():
     return jsonify({
         **paged,
         "items": [{
-            "id":          l.id,
-            "timestamp":   l.timestamp.isoformat(),
-            "actor_type":  l.actor_type,
-            "actor_id":    l.actor_id,
-            "actor_role":  l.actor_role,
-            "ip_address":  l.ip_address,
-            "action":      l.action,
-            "resource_id": l.resource_id,
-            "status_code": l.status_code,
-            "detail":      l.detail,
-        } for l in paged["items"]],
+            "id":          entry.id,
+            "timestamp":   entry.timestamp.isoformat(),
+            "actor_type":  entry.actor_type,
+            "actor_id":    entry.actor_id,
+            "actor_role":  entry.actor_role,
+            "ip_address":  entry.ip_address,
+            "action":      entry.action,
+            "resource_id": entry.resource_id,
+            "status_code": entry.status_code,
+            "detail":      entry.detail,
+        } for entry in paged["items"]],
     })

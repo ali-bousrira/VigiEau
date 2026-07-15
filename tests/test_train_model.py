@@ -116,7 +116,7 @@ class TestLogToMlflow:
     def test_enregistre_le_modele(self):
         model = MagicMock()
         with patch("mlflow.set_tracking_uri") as m_uri, \
-             patch("mlflow.set_experiment") as m_exp, \
+             patch("mlflow.set_experiment") as _m_exp, \
              patch("mlflow.start_run") as m_run, \
              patch("mlflow.log_params"), \
              patch("mlflow.log_metrics"), \

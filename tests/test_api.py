@@ -11,7 +11,6 @@ Modèle ML et scaler mockés — base SQLite en mémoire.
 Tokens et env vars initialisés par tests/conftest.py.
 """
 
-import os
 import secrets
 import pytest
 from unittest.mock import MagicMock
@@ -25,9 +24,9 @@ _mock_model.predict_proba.return_value  = np.array([[0.13, 0.87]])
 _mock_scaler = MagicMock()
 _mock_scaler.transform.side_effect = lambda x: x
 
-import predict_service
-from api.app        import create_app
-from api.models.db  import init_db, SessionLocal, Client
+import predict_service  # noqa: E402 — doit rester après les mocks ML ci-dessus
+from api.app        import create_app  # noqa: E402
+from api.models.db  import init_db, SessionLocal, Client  # noqa: E402
 
 predict_service._model         = _mock_model
 predict_service._scaler        = _mock_scaler
@@ -304,7 +303,9 @@ class TestPredictAutonome:
         import secrets as s
         c2 = C(id_client="PRED-OTHER", denomination="Autre", adresse="X", actif=True)
         c2.set_api_key(s.token_urlsafe(16))
-        db.add(c2); db.commit(); db.close()
+        db.add(c2)
+        db.commit()
+        db.close()
 
         r = http.post("/predict",
                       json={"prelevement_id": "00000000-0000-0000-0000-000000000000"},
@@ -404,7 +405,8 @@ class TestAnalyste:
         db     = SessionLocal()
         client = db.query(Client).filter(Client.id_client == "TEST-001").first()
         prev   = Prelevement(client_id=client.id)
-        db.add(prev); db.commit()
+        db.add(prev)
+        db.commit()
         db.add(Prediction(prelevement_id=prev.id, potable=0,
                            probability=0.05, model_version="test"))
         db.commit()
