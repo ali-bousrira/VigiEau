@@ -728,9 +728,9 @@ function prevTable(items, withClient) {
         <tbody>${items.map(p => {
             const pred = p.prediction;
             return `<tr class="border-b border-[#252238]/70 hover:bg-[#252238]/50 transition-colors">
-                ${withClient ? `<td class="px-6 py-3 font-medium text-[var(--ink)]">${p.client_id || '—'}</td>` : ''}
+                ${withClient ? `<td class="px-6 py-3 font-medium text-[var(--ink)]">${_esc(p.client_id || '—')}</td>` : ''}
                 <td class="px-6 py-3 text-[var(--muted)]">${fdate(p.date_prelevement || p.created_at)}</td>
-                <td class="px-6 py-3 text-[var(--ink)]">${p.lieu || '—'}</td>
+                <td class="px-6 py-3 text-[var(--ink)]">${_esc(p.lieu || '—')}</td>
                 <td class="px-6 py-3">${sourceBadge(p.source)}</td>
                 <td class="px-6 py-3">${potBadge(pred?.potable)}</td>
                 <td class="px-6 py-3 text-[var(--muted)]">${pred ? `${(pred.probability * 100).toFixed(1)}%` : '—'}</td>
@@ -797,7 +797,7 @@ async function submitManual() {
         res.classList.remove('hidden');
         loadClientPrevs(); loadClientStats();
     } catch(e) {
-        res.innerHTML = `${ICON_WARN}${e.error || 'Erreur lors de l\'analyse.'}`;
+        res.innerHTML = `${ICON_WARN}${_esc(e.error || 'Erreur lors de l\'analyse.')}`;
         res.className = 'mt-4 rounded-xl p-4 text-sm text-center bg-[#f2735f]/15 border border-[#f2735f]/30 text-[var(--danger)]';
         res.classList.remove('hidden');
     } finally { btn.textContent = 'Analyser'; btn.disabled = false; }
@@ -831,7 +831,7 @@ async function submitOcr(input) {
         res.classList.remove('hidden');
         loadClientPrevs(); loadClientStats();
     } catch(e) {
-        res.innerHTML = `${ICON_WARN}${e.error || 'Erreur OCR.'}`;
+        res.innerHTML = `${ICON_WARN}${_esc(e.error || 'Erreur OCR.')}`;
         res.className = 'mt-4 rounded-xl p-3 text-sm bg-[#f2735f]/15 border border-[#f2735f]/30 text-[var(--danger)]';
         res.classList.remove('hidden');
     } finally {
@@ -890,8 +890,8 @@ async function loadDashboard() {
             ? recs.slice(0, 8).map(p => `
                 <div class="flex items-center justify-between py-2 border-b border-[#252238]/70 last:border-0 gap-2">
                     <div class="min-w-0">
-                        <span class="text-sm text-[var(--ink)] font-medium">${p.client_id || '—'}</span>
-                        <span class="text-xs text-[var(--muted)] ml-1.5">${p.lieu || ''}</span>
+                        <span class="text-sm text-[var(--ink)] font-medium">${_esc(p.client_id || '—')}</span>
+                        <span class="text-xs text-[var(--muted)] ml-1.5">${_esc(p.lieu || '')}</span>
                     </div>
                     ${potBadge(p.prediction?.potable)}
                 </div>`).join('')
@@ -975,13 +975,13 @@ function auditTable(items) {
         </tr></thead>
         <tbody>${items.map(l => `<tr class="border-b border-[#252238]/70 hover:bg-[#252238]/50 transition-colors">
                 <td class="px-6 py-3 text-[var(--muted)] whitespace-nowrap">${new Date(l.timestamp).toLocaleString('fr-FR')}</td>
-                <td class="px-6 py-3 font-medium text-[var(--ink)]">${l.actor_type}${l.actor_id ? ` · ${l.actor_id}` : ''}</td>
-                <td class="px-6 py-3 text-[var(--muted)]">${l.actor_role || '—'}</td>
-                <td class="px-6 py-3 font-mono text-xs text-[var(--ink)]">${l.action}</td>
-                <td class="px-6 py-3 text-[var(--muted)] font-mono text-xs">${l.resource_id || '—'}</td>
+                <td class="px-6 py-3 font-medium text-[var(--ink)]">${_esc(l.actor_type)}${l.actor_id ? ` · ${_esc(l.actor_id)}` : ''}</td>
+                <td class="px-6 py-3 text-[var(--muted)]">${_esc(l.actor_role || '—')}</td>
+                <td class="px-6 py-3 font-mono text-xs text-[var(--ink)]">${_esc(l.action)}</td>
+                <td class="px-6 py-3 text-[var(--muted)] font-mono text-xs">${_esc(l.resource_id || '—')}</td>
                 <td class="px-6 py-3 ${l.status_code >= 400 ? 'text-[var(--danger)]' : 'text-[var(--muted)]'}">${l.status_code}</td>
-                <td class="px-6 py-3 text-[var(--muted)] font-mono text-xs">${l.ip_address || '—'}</td>
-                <td class="px-6 py-3 text-[var(--muted)] text-xs truncate max-w-xs">${l.detail || '—'}</td>
+                <td class="px-6 py-3 text-[var(--muted)] font-mono text-xs">${_esc(l.ip_address || '—')}</td>
+                <td class="px-6 py-3 text-[var(--muted)] text-xs truncate max-w-xs">${_esc(l.detail || '—')}</td>
             </tr>`).join('')}</tbody>
     </table></div>`;
 }
@@ -1035,11 +1035,11 @@ async function loadClients() {
                 <div class="flex items-center gap-3 min-w-0">
                     <div class="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm shrink-0
                         ${c.actif ? 'bg-[#8b7ff0]/20 text-[var(--accent)]' : 'bg-[var(--surface2)] text-[var(--muted)]'}">
-                        ${(c.denomination || '?')[0]}
+                        ${_esc((c.denomination || '?')[0])}
                     </div>
                     <div class="min-w-0">
-                        <p class="font-medium text-[var(--ink)] truncate">${c.denomination}</p>
-                        <p class="text-xs text-[var(--muted)]">${c.id_client} · ${c.nb_prelevements} prélèvement${c.nb_prelevements !== 1 ? 's' : ''}</p>
+                        <p class="font-medium text-[var(--ink)] truncate">${_esc(c.denomination)}</p>
+                        <p class="text-xs text-[var(--muted)]">${_esc(c.id_client)} · ${c.nb_prelevements} prélèvement${c.nb_prelevements !== 1 ? 's' : ''}</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2 shrink-0">
@@ -1047,7 +1047,7 @@ async function loadClients() {
                         ${c.actif ? 'Actif' : 'Inactif'}
                     </span>
                     <span class="text-xs text-[var(--muted-dim)] font-mono hidden sm:block">${c.api_key_hint || '—'}</span>
-                    <button onclick="genKey('${c.id}','${c.id_client}')"
+                    <button onclick="genKey('${c.id}')"
                         class="text-xs bg-[var(--surface2)] hover:bg-[#8b7ff0]/20 hover:text-[var(--accent)] text-[var(--muted)] px-2.5 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1.5">
                         <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="7.5" cy="15.5" r="4.5"/><path d="m11 12 7-7"/><path d="m15 8 3 3"/><path d="m17 6 3 3"/></svg>
                         Nouvelle clé
@@ -1081,7 +1081,7 @@ async function createClient() {
     }
 }
 
-async function genKey(clientId, clientLabel) {
+async function genKey(clientId) {
     try {
         const d = await api('POST', `/admin/clients/${clientId}/apikey`);
         openModal(
@@ -1143,17 +1143,17 @@ function renderCliList(clients) {
     }
     el.innerHTML = clients.map(c => `
         <div class="cd-cli-row px-4 py-3 cursor-pointer border-b border-[#252238]/60 last:border-0 hover:bg-[#252238]/60 transition-colors flex items-center gap-3 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--accent)]"
-             data-id="${c.id}" data-label="${c.denomination}"
+             data-id="${c.id}" data-label="${_esc(c.denomination)}"
              role="button" tabindex="0"
              onclick="selectClient('${c.id}')"
              onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectClient('${c.id}')}">
             <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shrink-0
                 ${c.actif ? 'bg-[#8b7ff0]/20 text-[var(--accent)]' : 'bg-[var(--surface2)] text-[var(--muted)]'}">
-                ${(c.denomination||'?')[0].toUpperCase()}
+                ${_esc((c.denomination||'?')[0].toUpperCase())}
             </div>
             <div class="min-w-0 flex-1">
-                <p class="text-sm text-[var(--ink)] font-medium truncate">${c.denomination}</p>
-                <p class="text-[10px] text-[var(--muted)]">${c.id_client} · ${c.nb_prelevements} prélt.</p>
+                <p class="text-sm text-[var(--ink)] font-medium truncate">${_esc(c.denomination)}</p>
+                <p class="text-[10px] text-[var(--muted)]">${_esc(c.id_client)} · ${c.nb_prelevements} prélt.</p>
             </div>
             <span class="w-2 h-2 rounded-full shrink-0 ${c.actif ? 'bg-[var(--success)]' : 'bg-[var(--surface2)]'}"></span>
         </div>`).join('');
@@ -1239,7 +1239,7 @@ async function selectClient(clientDbId) {
 
     } catch(e) {
         const msg = e?.error || e?.message || JSON.stringify(e) || 'Erreur inconnue';
-        document.getElementById('cd-prevs').innerHTML = `<p class="text-[var(--danger)] text-xs text-center py-6">${msg}</p>`;
+        document.getElementById('cd-prevs').innerHTML = `<p class="text-[var(--danger)] text-xs text-center py-6">${_esc(msg)}</p>`;
         document.getElementById('cd-sources').innerHTML = '<p class="text-[var(--danger)] text-xs">—</p>';
     }
 }
@@ -1260,7 +1260,7 @@ async function loadApiExplorer() {
         document.getElementById('api-spec-ver').textContent = ver ? `v${ver}` : '';
         renderApiExplorer(_apiSpec);
     } catch(e) {
-        el.innerHTML = `<p class="text-[var(--danger)] text-sm text-center py-8">Impossible de charger la spécification API (${e.message}).</p>`;
+        el.innerHTML = `<p class="text-[var(--danger)] text-sm text-center py-8">Impossible de charger la spécification API (${_esc(e.message)}).</p>`;
     }
 }
 
@@ -1423,11 +1423,14 @@ async function tryApiEp(id, method, pathTpl) {
             </div>
             <pre class="bg-[var(--ground)] border border-[var(--surface2)] rounded-lg p-4 text-xs text-[var(--ink)] font-mono overflow-x-auto max-h-72 overflow-y-auto">${_esc(pretty)}</pre>`;
     } catch(e) {
-        resEl.innerHTML = `<p class="text-[var(--danger)] text-sm py-2">Erreur réseau : ${e.message}</p>`;
+        resEl.innerHTML = `<p class="text-[var(--danger)] text-sm py-2">Erreur réseau : ${_esc(e.message)}</p>`;
     }
 }
 
-function _esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function _esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
 
 function filterApiRoutes(q) {
     const lq = q.toLowerCase();
