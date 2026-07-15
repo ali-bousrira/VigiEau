@@ -306,8 +306,8 @@ def me_rgpd():
         ],
         "regles_conservation": {
             "prelevements_et_mesures": "Conservés sans limitation de durée tant que le compte est actif.",
-            "journaux_acces":          "Conservés 12 mois glissants, puis purgés automatiquement.",
-            "metriques_performance":   "Agrégées et anonymisées après 90 jours.",
+            "journaux_acces":          "Recommandé : 12 mois glissants. Purge non automatisée à ce jour.",
+            "metriques_performance":   "Recommandé : 90 jours. Agrégation/anonymisation non automatisée à ce jour.",
             "cle_api":                 "Jamais stockée en clair. Seul un hash SHA-256 est conservé.",
         },
         "vos_droits": {
