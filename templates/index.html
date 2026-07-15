@@ -564,8 +564,8 @@ async function apiFile(path, fd) {
 // ════════════════════════════════════════
 function setLoginTab(t) {
     S.ltab = t;
-    const on  = 'flex-1 py-2 rounded-lg text-sm font-medium transition-all bg-[var(--surface2)] text-white shadow';
-    const off = 'flex-1 py-2 rounded-lg text-sm font-medium transition-all text-[var(--muted)] hover:text-[var(--ink)]';
+    const on  = 'flex-1 py-2 rounded-lg text-sm font-medium transition-all bg-[var(--surface2)] text-white shadow inline-flex items-center justify-center gap-1.5';
+    const off = 'flex-1 py-2 rounded-lg text-sm font-medium transition-all text-[var(--muted)] hover:text-[var(--ink)] inline-flex items-center justify-center gap-1.5';
     document.getElementById('ltab-client').className = t === 'client' ? on : off;
     document.getElementById('ltab-expert').className = t === 'expert' ? on : off;
     document.getElementById('ls-client').classList.toggle('hidden', t !== 'client');
@@ -659,7 +659,7 @@ function showTab(tab) {
     document.querySelectorAll('.tab-btn').forEach(b => {
         const active   = b.dataset.tab === tab;
         const wasHidden = b.classList.contains('hidden');
-        b.className = `tab-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+        b.className = `tab-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-colors inline-flex items-center gap-1.5 ${
             active ? 'bg-[var(--surface2)] text-white' : 'text-[var(--muted)] hover:text-[var(--ink)] hover:bg-[#252238]/70'
         }${wasHidden ? ' hidden' : ''}`;
         b.setAttribute('aria-selected', active ? 'true' : 'false');
