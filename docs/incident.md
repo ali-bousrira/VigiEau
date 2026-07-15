@@ -37,9 +37,9 @@ Les logs Flask montrent :
 ### Détection via audit_logs
 ```json
 {
-  "action": "ingest_ocr",
+  "action": "client_ingest_ocr_predict",
   "detail": "ocr_provider=claude_vision (fallback: ocr.space timeout)",
-  "status_code": 200
+  "status_code": 201
 }
 ```
 
@@ -49,20 +49,20 @@ Les logs Flask montrent :
 
 **Cause identifiée :** OCR.space est en maintenance non planifiée (vérifiable sur leur page de statut).
 
-**Impact réel :** Aucune perte de données — le fallback Claude Vision est automatiquement activé dans `ocr_service.py` :
+**Impact réel :** Aucune perte de données — le fallback Claude Vision est automatiquement activé dans `extract_from_document()` (`ocr_service.py:194-230`) :
 
 ```python
-# ocr_service.py
-def extract_from_file(file_bytes, mime_type):
-    if OCR_SPACE_API_KEY:
-        try:
-            result = _call_ocr_space(file_bytes, mime_type)
-            return result
-        except Exception as e:
-            logger.warning(f"OCR.space request failed: {e}")
-            logger.info("Falling back to Claude Vision API")
-    
-    return _call_claude_vision(file_bytes, mime_type)
+# ocr_service.py — extrait réel, simplifié
+if OCR_SPACE_KEY:
+    try:
+        raw_text = _ocr_space(file_bytes, mime)          # extraction primaire
+        if len(raw_text) < 20:
+            raise ValueError("Texte trop court")
+        return _normalise(_claude_structure(raw_text))    # Claude structure le texte OCR.space
+    except Exception as exc:
+        logger.warning("OCR.space échoué (%s) — fallback Claude Vision", exc)
+
+return _normalise(_claude_vision_extract(file_bytes, mime))  # extraction directe par Claude
 ```
 
 **Impact utilisateur :** Latence accrue (~15s au lieu de ~3s) pendant la durée de l'incident.
@@ -86,30 +86,38 @@ Et la latence p95 redescend sous 4 000 ms.
 
 ### Test de non-régression à rejouer
 ```bash
-pytest tests/test_fonctionnels.py -k "ocr" -v
+pytest tests/test_e2e.py -v
 ```
+(pipeline complet OCR → prélèvement → prédiction, OCR mocké — 10 tests)
 
 ---
 
 ## 4. Mise à jour du code et versionnement
 
-### Amélioration apportée (post-incident)
+### Amélioration proposée (non implémentée à ce jour)
 
-Ajout d'un header de contexte dans la réponse API pour indiquer quel provider OCR a été utilisé :
+Idée retenue suite à l'incident, **pas encore réalisée dans le code** :
+exposer dans la réponse quel provider OCR a effectivement traité le
+document, pour que l'analyste sache si une extraction est passée par le
+fallback (potentiellement moins précis sur certains formats) :
 
 ```python
-# Dans la réponse JSON de /ingest/ocr
+# Proposition — pas dans la réponse actuelle de /ingest/ocr(-and-predict)
 {
   "prelevement_id": "...",
   "ocr_provider": "claude_vision",  # ou "ocr_space"
   "ocr_fallback": true,
-  "extraction": { ... }
+  "ocr": { ... }
 }
 ```
 
-Cela permet à l'analyste de savoir si une extraction a été faite via le fallback (potentiellement moins précis sur certains formats).
+Aujourd'hui, la réponse réelle (`routes.py:504-507,559-565`) est
+`{prelevement_id, ocr, prediction, prediction_possible}` — sans indication
+du provider utilisé. À faire : `extract_from_document()` devrait retourner
+le provider utilisé (ou le déduire d'un `warning` existant) pour que
+`routes.py` puisse le propager dans la réponse.
 
-### Commit associé
+### Commit à venir (si l'amélioration est réalisée)
 ```
 git commit -m "feat: expose ocr_provider and ocr_fallback in ingest response"
 ```
