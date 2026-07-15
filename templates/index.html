@@ -5,29 +5,57 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VigiEau — Potabilité</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['IBM Plex Sans', 'Segoe UI', 'system-ui', 'sans-serif'],
+                        mono: ['IBM Plex Mono', 'ui-monospace', 'SFMono-Regular', 'Consolas', 'monospace'],
+                    },
+                },
+            },
+        };
+    </script>
     <style>
-        *, body { font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; }
+        :root {
+            --ground: #100f18;
+            --surface: #1a1828;
+            --surface2: #252238;
+            --ink: #eeecf5;
+            --muted: #9691b5;
+            --muted-dim: #6f6a87;
+            --accent: #8b7ff0;
+            --accent-hover: #a599f5;
+            --accent-active: #7267d9;
+            --accent-ink: #14101f;
+            --success: #4ade80;
+            --danger: #f2735f;
+            --warning: #f0b355;
+            --role-exploit: #e0b34a;
+        }
+        *, body { font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif; }
         .spin { animation: _spin .7s linear infinite; }
         @keyframes _spin { to { transform: rotate(360deg); } }
         .fade-in { animation: _fade .2s ease; }
         @keyframes _fade { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:none; } }
         ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-track { background: #1e293b; }
-        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+        ::-webkit-scrollbar-track { background: var(--ground); }
+        ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 3px; }
         input[type=number]::-webkit-inner-spin-button { opacity: 0.4; }
     </style>
 </head>
-<body class="bg-[#0f172a] text-slate-200 min-h-screen">
+<body class="bg-[var(--ground)] text-[var(--ink)] min-h-screen">
 
 <!-- ═══════════════════ MODAL ═══════════════════ -->
 <div id="modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 max-w-md w-full shadow-2xl fade-in">
+    <div class="bg-[var(--surface)] border border-[var(--surface2)] rounded-2xl p-6 max-w-md w-full shadow-2xl fade-in">
         <h3 id="modal-title" class="font-bold text-white text-lg mb-1"></h3>
-        <p id="modal-sub" class="text-slate-400 text-sm mb-4"></p>
+        <p id="modal-sub" class="text-[var(--muted)] text-sm mb-4"></p>
         <div id="modal-body"></div>
         <button onclick="closeModal()"
-            class="mt-4 w-full bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl py-2.5 text-sm font-medium transition-colors">
+            class="mt-4 w-full bg-[var(--surface2)] hover:bg-[var(--surface2)] text-[var(--ink)] rounded-xl py-2.5 text-sm font-medium transition-colors">
             Fermer
         </button>
     </div>
@@ -37,41 +65,48 @@
 <div id="pg-login" class="min-h-screen flex items-center justify-center p-4">
     <div class="w-full max-w-sm fade-in">
         <div class="text-center mb-8">
-            <div class="text-5xl mb-3">💧</div>
+            <div class="mb-3 flex justify-center text-[var(--accent)]">
+                <svg class="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 3c-3.5 4-6 7.2-6 10.5A6 6 0 0 0 12 20a6 6 0 0 0 6-6.5C18 10.2 15.5 7 12 3Z"/></svg>
+            </div>
             <h1 class="text-2xl font-bold text-white">VigiEau</h1>
-            <p class="text-slate-500 text-sm mt-1">Plateforme d'analyse de potabilité</p>
+            <p class="text-[var(--muted)] text-sm mt-1">Plateforme d'analyse de potabilité</p>
         </div>
-        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-2xl">
-            <div class="flex bg-slate-900/60 rounded-xl p-1 mb-5">
+        <div class="bg-[var(--surface)] border border-[var(--surface2)] rounded-2xl p-6 shadow-2xl">
+            <div class="flex bg-[#100f18]/60 rounded-xl p-1 mb-5">
                 <button id="ltab-client" onclick="setLoginTab('client')"
-                    class="flex-1 py-2 rounded-lg text-sm font-medium transition-all">
-                    🏛 Client
+                    class="flex-1 py-2 rounded-lg text-sm font-medium transition-all inline-flex items-center justify-center gap-1.5">
+                    <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 21V7l9-4 9 4v14"/><path d="M9 21v-6h6v6"/></svg>
+                    Client
                 </button>
                 <button id="ltab-expert" onclick="setLoginTab('expert')"
-                    class="flex-1 py-2 rounded-lg text-sm font-medium transition-all">
-                    🔬 Expert
+                    class="flex-1 py-2 rounded-lg text-sm font-medium transition-all inline-flex items-center justify-center gap-1.5">
+                    <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10.5" r="2"/><path d="M15 9.5h3M15 13.5h3M6 17h5"/></svg>
+                    Expert
                 </button>
             </div>
             <div id="ls-client">
-                <label for="inp-key" class="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">Clé API</label>
+                <label for="inp-key" class="block text-xs font-semibold text-[var(--muted)] mb-2 uppercase tracking-wide">Clé API</label>
                 <input id="inp-key" type="password" placeholder="Collez votre X-API-Key…"
-                    class="w-full bg-[#0f172a] border border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+                    class="w-full bg-[var(--ground)] border border-[var(--surface2)] rounded-xl px-4 py-3 text-sm text-[var(--ink)] placeholder-[var(--muted-dim)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-colors"
                     onkeydown="if(event.key==='Enter')doLogin()">
             </div>
             <div id="ls-expert" class="hidden">
-                <label for="inp-tok" class="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">Token Bearer</label>
+                <label for="inp-tok" class="block text-xs font-semibold text-[var(--muted)] mb-2 uppercase tracking-wide">Token Bearer</label>
                 <input id="inp-tok" type="password" placeholder="Collez votre token expert…"
-                    class="w-full bg-[#0f172a] border border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+                    class="w-full bg-[var(--ground)] border border-[var(--surface2)] rounded-xl px-4 py-3 text-sm text-[var(--ink)] placeholder-[var(--muted-dim)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-colors"
                     onkeydown="if(event.key==='Enter')doLogin()">
             </div>
-            <div id="login-err" class="hidden mt-3 bg-red-900/40 border border-red-800 text-red-300 rounded-lg px-3 py-2 text-sm" role="alert" aria-live="polite"></div>
+            <div id="login-err" class="hidden mt-3 bg-[#f2735f]/18 border border-[#f2735f]/30 text-[var(--danger)] rounded-lg px-3 py-2 text-sm" role="alert" aria-live="polite"></div>
             <button id="login-btn" onclick="doLogin()"
-                class="mt-4 w-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white rounded-xl py-3 text-sm font-semibold transition-colors">
+                class="mt-4 w-full bg-[var(--accent)] hover:bg-[var(--accent-hover)] active:bg-[var(--accent-active)] text-white rounded-xl py-3 text-sm font-semibold transition-colors">
                 Se connecter
             </button>
             <p class="text-center mt-4">
                 <a href="/apidocs" target="_blank"
-                    class="text-xs text-slate-500 hover:text-blue-400 transition-colors">Documentation API ↗</a>
+                    class="text-xs text-[var(--muted)] hover:text-[var(--accent)] transition-colors inline-flex items-center gap-1">
+                    Documentation API
+                    <svg class="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg>
+                </a>
             </p>
         </div>
     </div>
@@ -81,48 +116,54 @@
 <div id="pg-app" class="hidden min-h-screen flex flex-col">
 
     <!-- Header -->
-    <header class="bg-slate-800/90 border-b border-slate-700 sticky top-0 z-20 backdrop-blur">
+    <header class="bg-[#1a1828]/90 border-b border-[var(--surface2)] sticky top-0 z-20 backdrop-blur">
         <div class="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
             <div class="flex items-center gap-3 min-w-0">
-                <span class="text-xl select-none" aria-hidden="true">💧</span>
+                <svg class="w-5 h-5 text-[var(--accent)] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 3c-3.5 4-6 7.2-6 10.5A6 6 0 0 0 12 20a6 6 0 0 0 6-6.5C18 10.2 15.5 7 12 3Z"/></svg>
                 <h1 class="font-bold text-white hidden sm:block text-base m-0">VigiEau</h1>
                 <span id="hdr-badge" class="text-xs px-2 py-0.5 rounded-full font-medium shrink-0"></span>
-                <span id="hdr-user" class="text-sm text-slate-400 truncate"></span>
+                <span id="hdr-user" class="text-sm text-[var(--muted)] truncate"></span>
             </div>
             <!-- Expert tab nav -->
             <nav id="expert-tabs" class="hidden flex gap-1" role="tablist" aria-label="Sections expert">
                 <button onclick="showTab('dash')" data-tab="dash" role="tab" aria-selected="false"
-                    class="tab-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-colors">
-                    <span aria-hidden="true">📊</span> Dashboard
+                    class="tab-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-colors inline-flex items-center gap-1.5">
+                    <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                    Dashboard
                 </button>
                 <button onclick="showTab('prevs')" data-tab="prevs" role="tab" aria-selected="false"
-                    class="tab-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-colors">
-                    <span aria-hidden="true">🧪</span> Prélèvements
+                    class="tab-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-colors inline-flex items-center gap-1.5">
+                    <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 2v6L4 19a2 2 0 0 0 2 3h12a2 2 0 0 0 2-3l-5-11V2"/><path d="M9 2h6"/></svg>
+                    Prélèvements
                 </button>
                 <button onclick="showTab('clis')" data-tab="clis" role="tab" aria-selected="false"
-                    class="tab-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-colors">
-                    <span aria-hidden="true">🏛</span> Clients
+                    class="tab-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-colors inline-flex items-center gap-1.5">
+                    <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 21V7l9-4 9 4v14"/><path d="M9 21v-6h6v6"/></svg>
+                    Clients
                 </button>
                 <button onclick="showTab('cliDash')" data-tab="cliDash" role="tab" aria-selected="false"
-                    class="tab-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-colors">
-                    <span aria-hidden="true">📈</span> Par client
+                    class="tab-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-colors inline-flex items-center gap-1.5">
+                    <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="10" width="3" height="7"/><rect x="10.5" y="6" width="3" height="11"/><rect x="17" y="3" width="3" height="14"/></svg>
+                    Par client
                 </button>
                 <button onclick="showTab('api')" data-tab="api" role="tab" aria-selected="false"
-                    class="tab-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-colors">
-                    <span aria-hidden="true">🔌</span> API
+                    class="tab-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-colors inline-flex items-center gap-1.5">
+                    <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="9" width="16" height="10" rx="1.5"/><path d="M8 9V6a4 4 0 0 1 8 0v3"/></svg>
+                    API
                 </button>
                 <button id="tabbtn-audit" onclick="showTab('audit')" data-tab="audit" role="tab" aria-selected="false"
-                    class="hidden tab-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-colors">
-                    <span aria-hidden="true">🛡</span> Audit
+                    class="hidden tab-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-colors inline-flex items-center gap-1.5">
+                    <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18"/></svg>
+                    Audit
                 </button>
             </nav>
             <div class="flex items-center gap-3 shrink-0">
                 <div class="flex items-center gap-1.5">
-                    <span id="h-dot" class="w-2 h-2 rounded-full bg-slate-600"></span>
-                    <span id="h-txt" class="text-xs text-slate-500 hidden sm:block">…</span>
+                    <span id="h-dot" class="w-2 h-2 rounded-full bg-[var(--surface2)]"></span>
+                    <span id="h-txt" class="text-xs text-[var(--muted)] hidden sm:block">…</span>
                 </div>
                 <button onclick="logout()"
-                    class="text-xs text-slate-500 hover:text-red-400 transition-colors px-2 py-1 rounded">
+                    class="text-xs text-[var(--muted)] hover:text-[var(--danger)] transition-colors px-2 py-1 rounded">
                     Déconnexion
                 </button>
             </div>
@@ -136,41 +177,49 @@
         <div id="vw-client" class="hidden">
             <!-- Stats -->
             <div class="grid grid-cols-3 gap-4 mb-6">
-                <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 fade-in">
-                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Prélèvements</p>
+                <div class="bg-[var(--surface)] border border-[var(--surface2)] rounded-2xl p-5 fade-in">
+                    <p class="text-xs font-semibold text-[var(--muted)] uppercase tracking-wide mb-2">Prélèvements</p>
                     <p class="text-3xl font-bold text-white" id="c-stat-tot">—</p>
                 </div>
-                <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 fade-in">
-                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Potables</p>
-                    <p class="text-3xl font-bold text-green-400" id="c-stat-pot">—</p>
+                <div class="bg-[var(--surface)] border border-[var(--surface2)] rounded-2xl p-5 fade-in">
+                    <p class="text-xs font-semibold text-[var(--muted)] uppercase tracking-wide mb-2">Potables</p>
+                    <p class="text-3xl font-bold text-[var(--success)]" id="c-stat-pot">—</p>
                 </div>
-                <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 fade-in">
-                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Non potables</p>
-                    <p class="text-3xl font-bold text-red-400" id="c-stat-npot">—</p>
+                <div class="bg-[var(--surface)] border border-[var(--surface2)] rounded-2xl p-5 fade-in">
+                    <p class="text-xs font-semibold text-[var(--muted)] uppercase tracking-wide mb-2">Non potables</p>
+                    <p class="text-3xl font-bold text-[var(--danger)]" id="c-stat-npot">—</p>
                 </div>
             </div>
 
             <!-- Action panels -->
             <div class="grid grid-cols-2 gap-4 mb-6">
                 <!-- Manual form -->
-                <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 fade-in">
-                    <h2 class="font-semibold text-white mb-4">🧪 Nouvelle analyse manuelle</h2>
+                <div class="bg-[var(--surface)] border border-[var(--surface2)] rounded-2xl p-5 fade-in">
+                    <h2 class="font-semibold text-white mb-4 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-[var(--accent)] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 2v6L4 19a2 2 0 0 0 2 3h12a2 2 0 0 0 2-3l-5-11V2"/><path d="M9 2h6"/></svg>
+                        Nouvelle analyse manuelle
+                    </h2>
                     <div class="grid grid-cols-2 gap-3" id="manual-fields"></div>
                     <button id="btn-manual" onclick="submitManual()"
-                        class="mt-4 w-full bg-blue-600 hover:bg-blue-500 text-white rounded-xl py-2.5 text-sm font-semibold transition-colors">
+                        class="mt-4 w-full bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded-xl py-2.5 text-sm font-semibold transition-colors">
                         Analyser
                     </button>
                     <div id="manual-res" class="hidden mt-4 rounded-xl p-4 text-center" role="status" aria-live="polite"></div>
                 </div>
 
                 <!-- OCR Upload -->
-                <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 fade-in">
-                    <h2 class="font-semibold text-white mb-4">📄 Upload fiche laboratoire</h2>
+                <div class="bg-[var(--surface)] border border-[var(--surface2)] rounded-2xl p-5 fade-in">
+                    <h2 class="font-semibold text-white mb-4 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-[var(--accent)] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>
+                        Upload fiche laboratoire
+                    </h2>
                     <label id="drop-zone" for="ocr-inp"
-                        class="block cursor-pointer border-2 border-dashed border-slate-600 hover:border-blue-500 rounded-xl p-8 text-center transition-colors">
-                        <div class="text-4xl mb-2">📁</div>
-                        <p class="text-sm text-slate-400">Glisser-déposer ou cliquer</p>
-                        <p class="text-xs text-slate-600 mt-1">PDF · PNG · JPG · max 20 Mo</p>
+                        class="block cursor-pointer border-2 border-dashed border-[var(--surface2)] hover:border-[var(--accent)] rounded-xl p-8 text-center transition-colors">
+                        <div class="mb-2 flex justify-center text-[var(--muted-dim)]">
+                            <svg class="w-9 h-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+                        </div>
+                        <p class="text-sm text-[var(--muted)]">Glisser-déposer ou cliquer</p>
+                        <p class="text-xs text-[var(--muted-dim)] mt-1">PDF · PNG · JPG · max 20 Mo</p>
                     </label>
                     <input id="ocr-inp" type="file" class="hidden" accept=".pdf,.png,.jpg,.jpeg"
                         onchange="submitOcr(this)">
@@ -179,10 +228,10 @@
             </div>
 
             <!-- Prelevements list -->
-            <div class="bg-slate-800 border border-slate-700 rounded-2xl fade-in">
-                <div class="px-6 py-4 border-b border-slate-700 flex items-center justify-between">
+            <div class="bg-[var(--surface)] border border-[var(--surface2)] rounded-2xl fade-in">
+                <div class="px-6 py-4 border-b border-[var(--surface2)] flex items-center justify-between">
                     <h2 class="font-semibold text-white">Mes prélèvements récents</h2>
-                    <button onclick="loadClientPrevs()" class="text-xs text-blue-400 hover:underline">Actualiser</button>
+                    <button onclick="loadClientPrevs()" class="text-xs text-[var(--accent)] hover:underline">Actualiser</button>
                 </div>
                 <div id="c-prevs" aria-live="polite"></div>
             </div>
@@ -194,29 +243,29 @@
             <!-- Tab: Dashboard -->
             <div id="tab-dash" class="hidden" role="tabpanel" aria-label="Dashboard">
                 <div class="grid grid-cols-4 gap-4 mb-6">
-                    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 fade-in">
-                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Prélèvements</p>
+                    <div class="bg-[var(--surface)] border border-[var(--surface2)] rounded-2xl p-5 fade-in">
+                        <p class="text-xs font-semibold text-[var(--muted)] uppercase tracking-wide mb-2">Prélèvements</p>
                         <p class="text-3xl font-bold text-white" id="kpi-tot">—</p>
                     </div>
-                    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 fade-in">
-                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Taux potabilité</p>
-                        <p class="text-3xl font-bold text-green-400" id="kpi-rate">—</p>
+                    <div class="bg-[var(--surface)] border border-[var(--surface2)] rounded-2xl p-5 fade-in">
+                        <p class="text-xs font-semibold text-[var(--muted)] uppercase tracking-wide mb-2">Taux potabilité</p>
+                        <p class="text-3xl font-bold text-[var(--success)]" id="kpi-rate">—</p>
                     </div>
-                    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 fade-in">
-                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Clients actifs</p>
-                        <p class="text-3xl font-bold text-blue-400" id="kpi-clis">—</p>
+                    <div class="bg-[var(--surface)] border border-[var(--surface2)] rounded-2xl p-5 fade-in">
+                        <p class="text-xs font-semibold text-[var(--muted)] uppercase tracking-wide mb-2">Clients actifs</p>
+                        <p class="text-3xl font-bold text-[var(--accent)]" id="kpi-clis">—</p>
                     </div>
-                    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 fade-in">
-                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Prédictions</p>
+                    <div class="bg-[var(--surface)] border border-[var(--surface2)] rounded-2xl p-5 fade-in">
+                        <p class="text-xs font-semibold text-[var(--muted)] uppercase tracking-wide mb-2">Prédictions</p>
                         <p class="text-3xl font-bold text-white" id="kpi-pred">—</p>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 fade-in">
+                    <div class="bg-[var(--surface)] border border-[var(--surface2)] rounded-2xl p-5 fade-in">
                         <h3 class="font-semibold text-white mb-4">Moyennes physico-chimiques</h3>
                         <div id="kpi-moys" class="space-y-1"></div>
                     </div>
-                    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 fade-in">
+                    <div class="bg-[var(--surface)] border border-[var(--surface2)] rounded-2xl p-5 fade-in">
                         <h3 class="font-semibold text-white mb-4">Derniers prélèvements</h3>
                         <div id="kpi-rec" class="space-y-1"></div>
                     </div>
@@ -226,57 +275,57 @@
             <!-- Tab: Prélèvements -->
             <div id="tab-prevs" class="hidden" role="tabpanel" aria-label="Prélèvements">
                 <!-- Filter bar -->
-                <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 mb-4 fade-in">
+                <div class="bg-[var(--surface)] border border-[var(--surface2)] rounded-2xl p-4 mb-4 fade-in">
                     <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
                         <div>
-                            <label for="f-client" class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Client</label>
+                            <label for="f-client" class="text-[10px] font-semibold text-[var(--muted)] uppercase tracking-wide block mb-1.5">Client</label>
                             <select id="f-client"
-                                class="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors">
+                                class="w-full bg-[var(--ground)] border border-[var(--surface2)] rounded-lg px-3 py-2 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-colors">
                                 <option value="">Tous les clients</option>
                             </select>
                         </div>
                         <div>
-                            <label for="f-source" class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Source</label>
+                            <label for="f-source" class="text-[10px] font-semibold text-[var(--muted)] uppercase tracking-wide block mb-1.5">Source</label>
                             <select id="f-source"
-                                class="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors">
+                                class="w-full bg-[var(--ground)] border border-[var(--surface2)] rounded-lg px-3 py-2 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-colors">
                                 <option value="">Toutes</option>
                                 <option value="manual">Manuel</option>
                                 <option value="ocr">OCR</option>
                             </select>
                         </div>
                         <div>
-                            <label for="f-potable" class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Résultat</label>
+                            <label for="f-potable" class="text-[10px] font-semibold text-[var(--muted)] uppercase tracking-wide block mb-1.5">Résultat</label>
                             <select id="f-potable"
-                                class="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors">
+                                class="w-full bg-[var(--ground)] border border-[var(--surface2)] rounded-lg px-3 py-2 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-colors">
                                 <option value="">Tous</option>
                                 <option value="1">Potable</option>
                                 <option value="0">Non potable</option>
                             </select>
                         </div>
                         <div>
-                            <label for="f-date-from" class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Date début</label>
+                            <label for="f-date-from" class="text-[10px] font-semibold text-[var(--muted)] uppercase tracking-wide block mb-1.5">Date début</label>
                             <input id="f-date-from" type="date"
-                                class="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors [color-scheme:dark]">
+                                class="w-full bg-[var(--ground)] border border-[var(--surface2)] rounded-lg px-3 py-2 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-colors [color-scheme:dark]">
                         </div>
                         <div>
-                            <label for="f-date-to" class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Date fin</label>
+                            <label for="f-date-to" class="text-[10px] font-semibold text-[var(--muted)] uppercase tracking-wide block mb-1.5">Date fin</label>
                             <input id="f-date-to" type="date"
-                                class="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors [color-scheme:dark]">
+                                class="w-full bg-[var(--ground)] border border-[var(--surface2)] rounded-lg px-3 py-2 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-colors [color-scheme:dark]">
                         </div>
                     </div>
                     <div class="flex items-center gap-2 mt-3">
                         <button onclick="loadAllPrevs()"
-                            class="bg-blue-600 hover:bg-blue-500 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors">
+                            class="bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors">
                             Filtrer
                         </button>
                         <button onclick="resetFilters()"
-                            class="bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg px-4 py-2 text-sm font-medium transition-colors">
+                            class="bg-[var(--surface2)] hover:bg-[var(--surface2)] text-[var(--ink)] rounded-lg px-4 py-2 text-sm font-medium transition-colors">
                             Réinitialiser
                         </button>
-                        <span id="f-count" class="text-xs text-slate-500 ml-auto"></span>
+                        <span id="f-count" class="text-xs text-[var(--muted)] ml-auto"></span>
                     </div>
                 </div>
-                <div class="bg-slate-800 border border-slate-700 rounded-2xl fade-in">
+                <div class="bg-[var(--surface)] border border-[var(--surface2)] rounded-2xl fade-in">
                     <div id="e-prevs" aria-live="polite"></div>
                 </div>
             </div>
@@ -284,35 +333,38 @@
             <!-- Tab: Clients -->
             <div id="tab-clis" class="hidden" role="tabpanel" aria-label="Clients">
                 <div class="grid grid-cols-3 gap-4">
-                    <div class="col-span-2 bg-slate-800 border border-slate-700 rounded-2xl fade-in">
-                        <div class="px-6 py-4 border-b border-slate-700 flex items-center justify-between">
+                    <div class="col-span-2 bg-[var(--surface)] border border-[var(--surface2)] rounded-2xl fade-in">
+                        <div class="px-6 py-4 border-b border-[var(--surface2)] flex items-center justify-between">
                             <h2 class="font-semibold text-white">Comptes clients</h2>
-                            <button onclick="loadClients()" class="text-xs text-blue-400 hover:underline">Actualiser</button>
+                            <button onclick="loadClients()" class="text-xs text-[var(--accent)] hover:underline">Actualiser</button>
                         </div>
                         <div id="clis-list" aria-live="polite"></div>
                     </div>
                     <!-- Create client -->
-                    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 h-fit fade-in">
-                        <h2 class="font-semibold text-white mb-4">➕ Nouveau client</h2>
+                    <div class="bg-[var(--surface)] border border-[var(--surface2)] rounded-2xl p-5 h-fit fade-in">
+                        <h2 class="font-semibold text-white mb-4 flex items-center gap-2">
+                            <svg class="w-4 h-4 text-[var(--accent)] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                            Nouveau client
+                        </h2>
                         <div class="space-y-3">
                             <div>
-                                <label for="nc-id" class="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Identifiant métier</label>
+                                <label for="nc-id" class="text-xs font-semibold text-[var(--muted)] uppercase tracking-wide block mb-1.5">Identifiant métier</label>
                                 <input id="nc-id" type="text" placeholder="COMM-042"
-                                    class="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors">
+                                    class="w-full bg-[var(--ground)] border border-[var(--surface2)] rounded-lg px-3 py-2.5 text-sm text-[var(--ink)] placeholder-[var(--muted-dim)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-colors">
                             </div>
                             <div>
-                                <label for="nc-den" class="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Dénomination</label>
+                                <label for="nc-den" class="text-xs font-semibold text-[var(--muted)] uppercase tracking-wide block mb-1.5">Dénomination</label>
                                 <input id="nc-den" type="text" placeholder="Commune de Bordeaux"
-                                    class="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors">
+                                    class="w-full bg-[var(--ground)] border border-[var(--surface2)] rounded-lg px-3 py-2.5 text-sm text-[var(--ink)] placeholder-[var(--muted-dim)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-colors">
                             </div>
                             <div>
-                                <label for="nc-adr" class="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Adresse</label>
+                                <label for="nc-adr" class="text-xs font-semibold text-[var(--muted)] uppercase tracking-wide block mb-1.5">Adresse</label>
                                 <input id="nc-adr" type="text" placeholder="1 Place de la Mairie…"
-                                    class="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors">
+                                    class="w-full bg-[var(--ground)] border border-[var(--surface2)] rounded-lg px-3 py-2.5 text-sm text-[var(--ink)] placeholder-[var(--muted-dim)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-colors">
                             </div>
                         </div>
                         <button onclick="createClient()"
-                            class="mt-4 w-full bg-blue-600 hover:bg-blue-500 text-white rounded-xl py-2.5 text-sm font-semibold transition-colors">
+                            class="mt-4 w-full bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded-xl py-2.5 text-sm font-semibold transition-colors">
                             Créer le compte
                         </button>
                         <div id="nc-res" class="hidden mt-3 text-xs rounded-lg px-3 py-2" role="status" aria-live="polite"></div>
@@ -324,14 +376,16 @@
                 <div class="grid grid-cols-4 gap-4 h-full" style="min-height:70vh">
 
                     <!-- Liste clients -->
-                    <div class="col-span-1 bg-slate-800 border border-slate-700 rounded-2xl flex flex-col overflow-hidden">
-                        <div class="px-4 py-3 border-b border-slate-700 flex items-center justify-between">
-                            <span class="text-sm font-semibold text-white">Clients</span>
-                            <button onclick="loadCliDashList()" class="text-xs text-blue-400 hover:underline">↺</button>
+                    <div class="col-span-1 bg-[var(--surface)] border border-[var(--surface2)] rounded-2xl flex flex-col overflow-hidden">
+                        <div class="px-4 py-3 border-b border-[var(--surface2)] flex items-center justify-between">
+                            <h2 class="text-sm font-semibold text-white">Clients</h2>
+                            <button onclick="loadCliDashList()" class="text-[var(--accent)] hover:underline" aria-label="Actualiser la liste des clients">
+                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg>
+                            </button>
                         </div>
                         <input id="cd-search" type="text" placeholder="Rechercher…"
                             oninput="filterCliList(this.value)"
-                            class="mx-3 mt-3 mb-2 bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors">
+                            class="mx-3 mt-3 mb-2 bg-[var(--ground)] border border-[var(--surface2)] rounded-lg px-3 py-2 text-xs text-[var(--ink)] placeholder-[var(--muted-dim)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-colors">
                         <div id="cd-list" class="flex-1 overflow-y-auto" aria-live="polite"></div>
                     </div>
 
@@ -339,8 +393,10 @@
                     <div class="col-span-3 space-y-4">
                         <!-- Placeholder vide -->
                         <div id="cd-empty" class="h-full flex items-center justify-center">
-                            <div class="text-center text-slate-600">
-                                <div class="text-5xl mb-3">👈</div>
+                            <div class="text-center text-[var(--muted-dim)]">
+                                <div class="mb-3 flex justify-center">
+                                    <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M19 12H5"/><path d="m11 18-6-6 6-6"/></svg>
+                                </div>
                                 <p class="text-sm">Sélectionnez un client pour voir son dashboard</p>
                             </div>
                         </div>
@@ -348,55 +404,55 @@
                         <!-- Contenu client sélectionné -->
                         <div id="cd-content" class="hidden space-y-4">
                             <!-- En-tête client -->
-                            <div class="bg-slate-800 border border-slate-700 rounded-2xl px-6 py-4 flex items-center gap-4">
-                                <div id="cd-avatar" class="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg bg-blue-900/60 text-blue-300 shrink-0"></div>
+                            <div class="bg-[var(--surface)] border border-[var(--surface2)] rounded-2xl px-6 py-4 flex items-center gap-4">
+                                <div id="cd-avatar" class="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg bg-[#8b7ff0]/20 text-[var(--accent)] shrink-0"></div>
                                 <div class="flex-1 min-w-0">
                                     <p id="cd-name" class="font-semibold text-white text-lg"></p>
-                                    <p id="cd-meta" class="text-xs text-slate-500"></p>
+                                    <p id="cd-meta" class="text-xs text-[var(--muted)]"></p>
                                 </div>
                                 <span id="cd-status" class="text-xs px-2.5 py-1 rounded-full font-medium shrink-0"></span>
                             </div>
 
                             <!-- KPIs -->
                             <div class="grid grid-cols-4 gap-3">
-                                <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4">
-                                    <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1">Total</p>
+                                <div class="bg-[var(--surface)] border border-[var(--surface2)] rounded-2xl p-4">
+                                    <p class="text-[10px] font-semibold text-[var(--muted)] uppercase tracking-wide mb-1">Total</p>
                                     <p class="text-2xl font-bold text-white" id="cd-kpi-tot">—</p>
                                 </div>
-                                <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4">
-                                    <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1">Potables</p>
-                                    <p class="text-2xl font-bold text-green-400" id="cd-kpi-pot">—</p>
+                                <div class="bg-[var(--surface)] border border-[var(--surface2)] rounded-2xl p-4">
+                                    <p class="text-[10px] font-semibold text-[var(--muted)] uppercase tracking-wide mb-1">Potables</p>
+                                    <p class="text-2xl font-bold text-[var(--success)]" id="cd-kpi-pot">—</p>
                                 </div>
-                                <div class="bg-slate-800 border border-slate-700 uppercase tracking-wide rounded-2xl p-4">
-                                    <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1">Non potables</p>
-                                    <p class="text-2xl font-bold text-red-400" id="cd-kpi-npot">—</p>
+                                <div class="bg-[var(--surface)] border border-[var(--surface2)] uppercase tracking-wide rounded-2xl p-4">
+                                    <p class="text-[10px] font-semibold text-[var(--muted)] uppercase tracking-wide mb-1">Non potables</p>
+                                    <p class="text-2xl font-bold text-[var(--danger)]" id="cd-kpi-npot">—</p>
                                 </div>
-                                <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4">
-                                    <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1">Taux</p>
-                                    <p class="text-2xl font-bold text-blue-400" id="cd-kpi-rate">—</p>
+                                <div class="bg-[var(--surface)] border border-[var(--surface2)] rounded-2xl p-4">
+                                    <p class="text-[10px] font-semibold text-[var(--muted)] uppercase tracking-wide mb-1">Taux</p>
+                                    <p class="text-2xl font-bold text-[var(--accent)]" id="cd-kpi-rate">—</p>
                                 </div>
                             </div>
 
                             <!-- Barre de potabilité -->
-                            <div class="bg-slate-800 border border-slate-700 rounded-2xl px-6 py-4">
-                                <div class="flex justify-between text-xs text-slate-500 mb-2">
+                            <div class="bg-[var(--surface)] border border-[var(--surface2)] rounded-2xl px-6 py-4">
+                                <div class="flex justify-between text-xs text-[var(--muted)] mb-2">
                                     <span>Répartition potabilité</span>
                                     <span id="cd-bar-label"></span>
                                 </div>
-                                <div class="h-3 rounded-full bg-slate-700 overflow-hidden">
-                                    <div id="cd-bar" class="h-full rounded-full bg-green-500 transition-all duration-700" style="width:0%"></div>
+                                <div class="h-3 rounded-full bg-[var(--surface2)] overflow-hidden">
+                                    <div id="cd-bar" class="h-full rounded-full bg-[var(--success)] transition-all duration-700" style="width:0%"></div>
                                 </div>
                             </div>
 
                             <!-- Sources + Prélèvements récents -->
                             <div class="grid grid-cols-3 gap-4">
-                                <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5">
-                                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Sources</p>
+                                <div class="bg-[var(--surface)] border border-[var(--surface2)] rounded-2xl p-5">
+                                    <p class="text-xs font-semibold text-[var(--muted)] uppercase tracking-wide mb-3">Sources</p>
                                     <div id="cd-sources" class="space-y-2"></div>
                                 </div>
-                                <div class="col-span-2 bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden">
-                                    <div class="px-5 py-3 border-b border-slate-700 flex items-center justify-between">
-                                        <span class="text-sm font-semibold text-white">Derniers prélèvements</span>
+                                <div class="col-span-2 bg-[var(--surface)] border border-[var(--surface2)] rounded-2xl overflow-hidden">
+                                    <div class="px-5 py-3 border-b border-[var(--surface2)] flex items-center justify-between">
+                                        <h2 class="text-sm font-semibold text-white">Derniers prélèvements</h2>
                                     </div>
                                     <div id="cd-prevs" aria-live="polite"></div>
                                 </div>
@@ -411,51 +467,51 @@
                 <div class="flex items-center gap-3 mb-5">
                     <input id="api-search" type="text" placeholder="Filtrer les routes…"
                         oninput="filterApiRoutes(this.value)"
-                        class="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors">
-                    <span id="api-spec-ver" class="text-xs text-slate-600 shrink-0"></span>
+                        class="flex-1 bg-[var(--surface)] border border-[var(--surface2)] rounded-xl px-4 py-2.5 text-sm text-[var(--ink)] placeholder-[var(--muted-dim)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-colors">
+                    <span id="api-spec-ver" class="text-xs text-[var(--muted-dim)] shrink-0"></span>
                 </div>
                 <div id="api-endpoints" class="space-y-6" aria-live="polite"></div>
             </div>
 
             <!-- Tab: Audit (exploit uniquement) -->
             <div id="tab-audit" class="hidden" role="tabpanel" aria-label="Audit">
-                <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 mb-4 fade-in">
+                <div class="bg-[var(--surface)] border border-[var(--surface2)] rounded-2xl p-4 mb-4 fade-in">
                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         <div>
-                            <label for="f-audit-type" class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Type d'acteur</label>
+                            <label for="f-audit-type" class="text-[10px] font-semibold text-[var(--muted)] uppercase tracking-wide block mb-1.5">Type d'acteur</label>
                             <select id="f-audit-type"
-                                class="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors">
+                                class="w-full bg-[var(--ground)] border border-[var(--surface2)] rounded-lg px-3 py-2 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-colors">
                                 <option value="">Tous</option>
                                 <option value="client">Client</option>
                                 <option value="expert">Expert</option>
                             </select>
                         </div>
                         <div>
-                            <label for="f-audit-id" class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Identifiant acteur</label>
+                            <label for="f-audit-id" class="text-[10px] font-semibold text-[var(--muted)] uppercase tracking-wide block mb-1.5">Identifiant acteur</label>
                             <input id="f-audit-id" type="text" placeholder="COMM-042 ou login…"
-                                class="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+                                class="w-full bg-[var(--ground)] border border-[var(--surface2)] rounded-lg px-3 py-2 text-sm text-[var(--ink)] placeholder-[var(--muted-dim)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-colors"
                                 onkeydown="if(event.key==='Enter')loadAudit()">
                         </div>
                         <div>
-                            <label for="f-audit-action" class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide block mb-1.5">Action</label>
+                            <label for="f-audit-action" class="text-[10px] font-semibold text-[var(--muted)] uppercase tracking-wide block mb-1.5">Action</label>
                             <input id="f-audit-action" type="text" placeholder="ex. ingest, login, rgpd…"
-                                class="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+                                class="w-full bg-[var(--ground)] border border-[var(--surface2)] rounded-lg px-3 py-2 text-sm text-[var(--ink)] placeholder-[var(--muted-dim)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-colors"
                                 onkeydown="if(event.key==='Enter')loadAudit()">
                         </div>
                     </div>
                     <div class="flex items-center gap-2 mt-3">
                         <button onclick="loadAudit()"
-                            class="bg-blue-600 hover:bg-blue-500 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors">
+                            class="bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors">
                             Filtrer
                         </button>
                         <button onclick="resetAuditFilters()"
-                            class="bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg px-4 py-2 text-sm font-medium transition-colors">
+                            class="bg-[var(--surface2)] hover:bg-[var(--surface2)] text-[var(--ink)] rounded-lg px-4 py-2 text-sm font-medium transition-colors">
                             Réinitialiser
                         </button>
-                        <span id="f-audit-count" class="text-xs text-slate-500 ml-auto"></span>
+                        <span id="f-audit-count" class="text-xs text-[var(--muted)] ml-auto"></span>
                     </div>
                 </div>
-                <div class="bg-slate-800 border border-slate-700 rounded-2xl fade-in">
+                <div class="bg-[var(--surface)] border border-[var(--surface2)] rounded-2xl fade-in">
                     <div id="e-audit" aria-live="polite"></div>
                 </div>
             </div>
@@ -470,6 +526,15 @@
 // ════════════════════════════════════════
 let S = { type: null, key: null, profile: null, ltab: 'client' };
 try { const raw = localStorage.getItem('wf2'); if (raw) S = JSON.parse(raw); } catch(e) {}
+
+// ════════════════════════════════════════
+// ICONS (svg fragments, réutilisées dans les messages générés en JS)
+// ════════════════════════════════════════
+const ICON_WARN  = '<svg class="w-4 h-4 inline-block align-[-3px] mr-1 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 9v4"/><circle cx="12" cy="16.5" r=".6" fill="currentColor" stroke="none"/><path d="M10.3 3.9 2.6 18a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>';
+const ICON_CHECK = '<svg class="w-4 h-4 inline-block align-[-3px] mr-1 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+const ICON_X     = '<svg class="w-4 h-4 inline-block align-[-3px] mr-1 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+const ICON_DOC   = '<svg class="w-4 h-4 inline-block align-[-3px] mr-1 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg>';
+function iconCheckOrX(ok, cls) { return `<svg class="${cls} shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">${ok ? '<path d="M20 6 9 17l-5-5"/>' : '<path d="M18 6 6 18M6 6l12 12"/>'}</svg>`; }
 
 // ════════════════════════════════════════
 // API HELPERS
@@ -499,8 +564,8 @@ async function apiFile(path, fd) {
 // ════════════════════════════════════════
 function setLoginTab(t) {
     S.ltab = t;
-    const on  = 'flex-1 py-2 rounded-lg text-sm font-medium transition-all bg-slate-700 text-white shadow';
-    const off = 'flex-1 py-2 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-slate-200';
+    const on  = 'flex-1 py-2 rounded-lg text-sm font-medium transition-all bg-[var(--surface2)] text-white shadow';
+    const off = 'flex-1 py-2 rounded-lg text-sm font-medium transition-all text-[var(--muted)] hover:text-[var(--ink)]';
     document.getElementById('ltab-client').className = t === 'client' ? on : off;
     document.getElementById('ltab-expert').className = t === 'expert' ? on : off;
     document.getElementById('ls-client').classList.toggle('hidden', t !== 'client');
@@ -563,7 +628,7 @@ function showApp() {
         const p = S.profile;
         const badge = document.getElementById('hdr-badge');
         badge.textContent = 'Client';
-        badge.className = 'text-xs px-2 py-0.5 rounded-full font-medium bg-blue-900/60 text-blue-300 shrink-0';
+        badge.className = 'text-xs px-2 py-0.5 rounded-full font-medium bg-[#8b7ff0]/20 text-[var(--accent)] shrink-0';
         document.getElementById('hdr-user').textContent = `${p.id_client} · ${p.denomination}`;
         document.getElementById('expert-tabs').classList.add('hidden');
         document.getElementById('vw-expert').classList.add('hidden');
@@ -576,7 +641,7 @@ function showApp() {
         const badge = document.getElementById('hdr-badge');
         badge.textContent = role;
         badge.className = `text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${
-            role === 'exploit' ? 'bg-purple-900/60 text-purple-300' : 'bg-green-900/60 text-green-300'
+            role === 'exploit' ? 'bg-[#e0b34a]/22 text-[var(--role-exploit)]' : 'bg-[#4ade80]/22 text-[var(--success)]'
         }`;
         document.getElementById('hdr-user').textContent =
             role === 'exploit' ? 'Responsable exploitation' : 'Analyste qualité';
@@ -595,7 +660,7 @@ function showTab(tab) {
         const active   = b.dataset.tab === tab;
         const wasHidden = b.classList.contains('hidden');
         b.className = `tab-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-            active ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
+            active ? 'bg-[var(--surface2)] text-white' : 'text-[var(--muted)] hover:text-[var(--ink)] hover:bg-[#252238]/70'
         }${wasHidden ? ' hidden' : ''}`;
         b.setAttribute('aria-selected', active ? 'true' : 'false');
     });
@@ -613,10 +678,10 @@ function showTab(tab) {
 async function pingHealth() {
     try {
         await fetch('/health');
-        document.getElementById('h-dot').className = 'w-2 h-2 rounded-full bg-green-500';
+        document.getElementById('h-dot').className = 'w-2 h-2 rounded-full bg-[var(--success)]';
         document.getElementById('h-txt').textContent = 'API en ligne';
     } catch {
-        document.getElementById('h-dot').className = 'w-2 h-2 rounded-full bg-red-500';
+        document.getElementById('h-dot').className = 'w-2 h-2 rounded-full bg-[var(--danger)]';
         document.getElementById('h-txt').textContent = 'API hors ligne';
     }
 }
@@ -625,18 +690,18 @@ async function pingHealth() {
 // SHARED UI HELPERS
 // ════════════════════════════════════════
 function sourceBadge(src) {
-    if (!src) return '<span class="text-slate-600 text-xs">—</span>';
+    if (!src) return '<span class="text-[var(--muted-dim)] text-xs">—</span>';
     const label = src === 'manual' ? 'Saisie' : src === 'ocr' ? 'OCR' : src;
-    const cls   = src === 'ocr' ? 'bg-violet-900/50 text-violet-300' : 'bg-slate-700 text-slate-400';
+    const cls   = src === 'ocr' ? 'bg-violet-900/50 text-violet-300' : 'bg-[var(--surface2)] text-[var(--muted)]';
     return `<span class="text-xs px-2 py-0.5 rounded-full ${cls}">${label}</span>`;
 }
 
 function potBadge(potable) {
-    if (potable == null) return '<span class="text-slate-600 text-xs">—</span>';
+    if (potable == null) return '<span class="text-[var(--muted-dim)] text-xs">—</span>';
     const ok = potable === 1;
     return `<span class="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full
-        ${ok ? 'bg-green-900/50 text-green-300' : 'bg-red-900/50 text-red-300'}">
-        <span class="w-1.5 h-1.5 rounded-full ${ok ? 'bg-green-400' : 'bg-red-400'}"></span>
+        ${ok ? 'bg-[#4ade80]/18 text-[var(--success)]' : 'bg-[#f2735f]/20 text-[var(--danger)]'}">
+        <span class="w-1.5 h-1.5 rounded-full ${ok ? 'bg-[var(--success)]' : 'bg-[var(--danger)]'}"></span>
         ${ok ? 'Potable' : 'Non potable'}
     </span>`;
 }
@@ -647,28 +712,28 @@ function fdate(s) {
 }
 
 function spinnerHtml() {
-    return '<div class="flex justify-center py-10"><div class="w-6 h-6 border-2 border-slate-700 border-t-blue-500 rounded-full spin"></div></div>';
+    return '<div class="flex justify-center py-10"><div class="w-6 h-6 border-2 border-[var(--surface2)] border-t-[var(--accent)] rounded-full spin"></div></div>';
 }
 
 function prevTable(items, withClient) {
-    if (!items.length) return '<p class="text-slate-500 text-sm text-center py-10">Aucun prélèvement.</p>';
+    if (!items.length) return '<p class="text-[var(--muted)] text-sm text-center py-10">Aucun prélèvement.</p>';
     const cols = withClient
         ? ['Client', 'Date', 'Lieu', 'Source', 'Résultat', 'Probabilité']
         : ['Date', 'Lieu', 'Source', 'Résultat', 'Probabilité'];
     return `<div class="overflow-x-auto">
     <table class="w-full text-sm">
-        <thead><tr class="text-xs text-slate-500 uppercase tracking-wide border-b border-slate-700">
+        <thead><tr class="text-xs text-[var(--muted)] uppercase tracking-wide border-b border-[var(--surface2)]">
             ${cols.map(c => `<th class="text-left px-6 py-3">${c}</th>`).join('')}
         </tr></thead>
         <tbody>${items.map(p => {
             const pred = p.prediction;
-            return `<tr class="border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors">
-                ${withClient ? `<td class="px-6 py-3 font-medium text-slate-300">${p.client_id || '—'}</td>` : ''}
-                <td class="px-6 py-3 text-slate-400">${fdate(p.date_prelevement || p.created_at)}</td>
-                <td class="px-6 py-3 text-slate-300">${p.lieu || '—'}</td>
+            return `<tr class="border-b border-[#252238]/70 hover:bg-[#252238]/50 transition-colors">
+                ${withClient ? `<td class="px-6 py-3 font-medium text-[var(--ink)]">${p.client_id || '—'}</td>` : ''}
+                <td class="px-6 py-3 text-[var(--muted)]">${fdate(p.date_prelevement || p.created_at)}</td>
+                <td class="px-6 py-3 text-[var(--ink)]">${p.lieu || '—'}</td>
                 <td class="px-6 py-3">${sourceBadge(p.source)}</td>
                 <td class="px-6 py-3">${potBadge(pred?.potable)}</td>
-                <td class="px-6 py-3 text-slate-400">${pred ? `${(pred.probability * 100).toFixed(1)}%` : '—'}</td>
+                <td class="px-6 py-3 text-[var(--muted)]">${pred ? `${(pred.probability * 100).toFixed(1)}%` : '—'}</td>
             </tr>`;
         }).join('')}</tbody>
     </table></div>`;
@@ -692,11 +757,11 @@ const FIELDS = [
 function buildManualForm() {
     document.getElementById('manual-fields').innerHTML = FIELDS.map(f => `
         <div>
-            <label for="mf-${f.k}" class="text-xs font-semibold text-slate-500 block mb-1">${f.l}</label>
+            <label for="mf-${f.k}" class="text-xs font-semibold text-[var(--muted)] block mb-1">${f.l}</label>
             <input id="mf-${f.k}" type="number" step="any" placeholder="${f.ph}"
                 ${f.hint ? `aria-describedby="mf-hint-${f.k}"` : ''}
-                class="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors">
-            ${f.hint ? `<p id="mf-hint-${f.k}" class="text-[10px] text-slate-600 mt-0.5">${f.hint}</p>` : ''}
+                class="w-full bg-[var(--ground)] border border-[var(--surface2)] rounded-lg px-3 py-2 text-sm text-[var(--ink)] placeholder-[var(--muted-dim)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-colors">
+            ${f.hint ? `<p id="mf-hint-${f.k}" class="text-[10px] text-[var(--muted-dim)] mt-0.5">${f.hint}</p>` : ''}
         </div>
     `).join('');
 }
@@ -710,8 +775,8 @@ async function submitManual() {
         if (v !== '' && v != null) body[f.k] = parseFloat(v);
     });
     if (!Object.keys(body).length) {
-        res.innerHTML = '⚠ Renseignez au moins quelques mesures.';
-        res.className = 'mt-4 rounded-xl p-4 text-sm text-center bg-yellow-900/30 border border-yellow-800 text-yellow-300';
+        res.innerHTML = ICON_WARN + 'Renseignez au moins quelques mesures.';
+        res.className = 'mt-4 rounded-xl p-4 text-sm text-center bg-[#f0b355]/16 border border-[#f0b355]/30 text-[var(--warning)]';
         res.classList.remove('hidden'); return;
     }
     btn.innerHTML = '<span class="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full spin mr-1.5"></span>Analyse…';
@@ -721,19 +786,19 @@ async function submitManual() {
         const p = d.prediction; const ok = p.potable === 1;
         const pct = (p.probability * 100).toFixed(1);
         res.innerHTML = `
-            <div class="text-3xl mb-2">${ok ? '✅' : '❌'}</div>
-            <div class="font-bold text-lg ${ok ? 'text-green-400' : 'text-red-400'}">${p.label}</div>
-            <div class="text-xs text-slate-400 mt-1">Probabilité de potabilité : ${pct}%</div>
-            <div class="mt-2.5 h-1.5 rounded-full bg-slate-700 overflow-hidden">
-                <div class="h-full rounded-full ${ok ? 'bg-green-500' : 'bg-red-500'}" style="width:${pct}%"></div>
+            <div class="mb-2 flex justify-center ${ok ? 'text-[var(--success)]' : 'text-[var(--danger)]'}">${iconCheckOrX(ok, 'w-8 h-8')}</div>
+            <div class="font-bold text-lg ${ok ? 'text-[var(--success)]' : 'text-[var(--danger)]'}">${p.label}</div>
+            <div class="text-xs text-[var(--muted)] mt-1">Probabilité de potabilité : ${pct}%</div>
+            <div class="mt-2.5 h-1.5 rounded-full bg-[var(--surface2)] overflow-hidden">
+                <div class="h-full rounded-full ${ok ? 'bg-[var(--success)]' : 'bg-[var(--danger)]'}" style="width:${pct}%"></div>
             </div>
-            <div class="text-[10px] text-slate-600 mt-2">ID : ${(d.prelevement_id||'').slice(0,8)}…</div>`;
-        res.className = `mt-4 rounded-xl p-4 ${ok ? 'bg-green-900/30 border border-green-800' : 'bg-red-900/30 border border-red-800'}`;
+            <div class="text-[10px] text-[var(--muted-dim)] mt-2">ID : ${(d.prelevement_id||'').slice(0,8)}…</div>`;
+        res.className = `mt-4 rounded-xl p-4 ${ok ? 'bg-[#4ade80]/14 border border-[#4ade80]/30' : 'bg-[#f2735f]/15 border border-[#f2735f]/30'}`;
         res.classList.remove('hidden');
         loadClientPrevs(); loadClientStats();
     } catch(e) {
-        res.innerHTML = `⚠ ${e.error || 'Erreur lors de l\'analyse.'}`;
-        res.className = 'mt-4 rounded-xl p-4 text-sm text-center bg-red-900/30 border border-red-800 text-red-300';
+        res.innerHTML = `${ICON_WARN}${e.error || 'Erreur lors de l\'analyse.'}`;
+        res.className = 'mt-4 rounded-xl p-4 text-sm text-center bg-[#f2735f]/15 border border-[#f2735f]/30 text-[var(--danger)]';
         res.classList.remove('hidden');
     } finally { btn.textContent = 'Analyser'; btn.disabled = false; }
 }
@@ -743,8 +808,8 @@ async function submitOcr(input) {
     const zone = document.getElementById('drop-zone');
     const res  = document.getElementById('ocr-res');
     zone.innerHTML = `<div class="py-6 text-center">
-        <div class="w-6 h-6 border-2 border-slate-700 border-t-blue-500 rounded-full spin mx-auto mb-2"></div>
-        <p class="text-xs text-slate-500">Extraction en cours…</p></div>`;
+        <div class="w-6 h-6 border-2 border-[var(--surface2)] border-t-[var(--accent)] rounded-full spin mx-auto mb-2"></div>
+        <p class="text-xs text-[var(--muted)]">Extraction en cours…</p></div>`;
     res.classList.add('hidden');
     try {
         const fd = new FormData(); fd.append('file', file);
@@ -752,27 +817,29 @@ async function submitOcr(input) {
         const p  = d.prediction;
         if (p) {
             const ok = p.potable === 1;
-            res.innerHTML = `<div class="font-semibold ${ok ? 'text-green-400' : 'text-red-400'} mb-1">
-                ${ok ? '✅' : '❌'} ${p.label} — ${(p.probability * 100).toFixed(1)}%</div>
-                <div class="text-[10px] text-slate-600">ID : ${(d.prelevement_id||'').slice(0,8)}…</div>`;
+            res.innerHTML = `<div class="font-semibold ${ok ? 'text-[var(--success)]' : 'text-[var(--danger)]'} mb-1">
+                ${iconCheckOrX(ok, 'w-4 h-4 inline-block align-[-3px] mr-1')}${p.label} — ${(p.probability * 100).toFixed(1)}%</div>
+                <div class="text-[10px] text-[var(--muted-dim)]">ID : ${(d.prelevement_id||'').slice(0,8)}…</div>`;
             res.className = `mt-4 rounded-xl p-3 text-sm ${ok
-                ? 'bg-green-900/30 border border-green-800'
-                : 'bg-red-900/30 border border-red-800'}`;
+                ? 'bg-[#4ade80]/14 border border-[#4ade80]/30'
+                : 'bg-[#f2735f]/15 border border-[#f2735f]/30'}`;
         } else {
-            res.innerHTML = `<p class="text-yellow-300">📄 OCR réussi — prédiction impossible (mesures insuffisantes)</p>
-                <p class="text-[10px] text-slate-600 mt-1">ID : ${(d.prelevement_id||'').slice(0,8)}…</p>`;
-            res.className = 'mt-4 rounded-xl p-3 text-sm bg-yellow-900/30 border border-yellow-800';
+            res.innerHTML = `<p class="text-[var(--warning)]">${ICON_DOC}OCR réussi — prédiction impossible (mesures insuffisantes)</p>
+                <p class="text-[10px] text-[var(--muted-dim)] mt-1">ID : ${(d.prelevement_id||'').slice(0,8)}…</p>`;
+            res.className = 'mt-4 rounded-xl p-3 text-sm bg-[#f0b355]/16 border border-[#f0b355]/30';
         }
         res.classList.remove('hidden');
         loadClientPrevs(); loadClientStats();
     } catch(e) {
-        res.innerHTML = `⚠ ${e.error || 'Erreur OCR.'}`;
-        res.className = 'mt-4 rounded-xl p-3 text-sm bg-red-900/30 border border-red-800 text-red-300';
+        res.innerHTML = `${ICON_WARN}${e.error || 'Erreur OCR.'}`;
+        res.className = 'mt-4 rounded-xl p-3 text-sm bg-[#f2735f]/15 border border-[#f2735f]/30 text-[var(--danger)]';
         res.classList.remove('hidden');
     } finally {
-        zone.innerHTML = `<div class="text-4xl mb-2">📁</div>
-            <p class="text-sm text-slate-400">Glisser-déposer ou cliquer</p>
-            <p class="text-xs text-slate-600 mt-1">PDF · PNG · JPG · max 20 Mo</p>`;
+        zone.innerHTML = `<div class="mb-2 flex justify-center text-[var(--muted-dim)]">
+                <svg class="w-9 h-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+            </div>
+            <p class="text-sm text-[var(--muted)]">Glisser-déposer ou cliquer</p>
+            <p class="text-xs text-[var(--muted-dim)] mt-1">PDF · PNG · JPG · max 20 Mo</p>`;
         input.value = '';
     }
 }
@@ -794,8 +861,8 @@ async function loadClientPrevs() {
         const d = await api('GET', '/me/prelevements?per_page=20');
         el.innerHTML = prevTable(d.items || [], false);
         if ((d.total || 0) > 20)
-            el.innerHTML += `<p class="text-xs text-slate-600 text-center py-3">${d.total} prélèvements · page ${d.page}/${d.pages}</p>`;
-    } catch(e) { el.innerHTML = '<p class="text-red-400 text-sm text-center py-8">Erreur de chargement.</p>'; }
+            el.innerHTML += `<p class="text-xs text-[var(--muted-dim)] text-center py-3">${d.total} prélèvements · page ${d.page}/${d.pages}</p>`;
+    } catch(e) { el.innerHTML = '<p class="text-[var(--danger)] text-sm text-center py-8">Erreur de chargement.</p>'; }
 }
 
 // ════════════════════════════════════════
@@ -813,22 +880,22 @@ async function loadDashboard() {
         const MLAB = { ph: 'pH', turbidity: 'Turbidité', conductivity: 'Conductivité', chloramines: 'Chloramines', hardness: 'Dureté' };
         const moys = d.moyennes || {};
         document.getElementById('kpi-moys').innerHTML = Object.entries(MLAB).map(([k, l]) => `
-            <div class="flex justify-between items-center py-2 border-b border-slate-700/50 last:border-0">
-                <span class="text-sm text-slate-400">${l}</span>
-                <span class="text-sm font-medium text-slate-200">${moys[k] != null ? moys[k] : '—'}</span>
+            <div class="flex justify-between items-center py-2 border-b border-[#252238]/70 last:border-0">
+                <span class="text-sm text-[var(--muted)]">${l}</span>
+                <span class="text-sm font-medium text-[var(--ink)]">${moys[k] != null ? moys[k] : '—'}</span>
             </div>`).join('');
 
         const recs = d.recents || [];
         document.getElementById('kpi-rec').innerHTML = recs.length
             ? recs.slice(0, 8).map(p => `
-                <div class="flex items-center justify-between py-2 border-b border-slate-700/50 last:border-0 gap-2">
+                <div class="flex items-center justify-between py-2 border-b border-[#252238]/70 last:border-0 gap-2">
                     <div class="min-w-0">
-                        <span class="text-sm text-slate-300 font-medium">${p.client_id || '—'}</span>
-                        <span class="text-xs text-slate-500 ml-1.5">${p.lieu || ''}</span>
+                        <span class="text-sm text-[var(--ink)] font-medium">${p.client_id || '—'}</span>
+                        <span class="text-xs text-[var(--muted)] ml-1.5">${p.lieu || ''}</span>
                     </div>
                     ${potBadge(p.prediction?.potable)}
                 </div>`).join('')
-            : '<p class="text-slate-500 text-sm text-center py-4">Aucun prélèvement.</p>';
+            : '<p class="text-[var(--muted)] text-sm text-center py-4">Aucun prélèvement.</p>';
     } catch(e) {}
 }
 
@@ -881,8 +948,8 @@ async function loadAllPrevs() {
         const cnt = document.getElementById('f-count');
         if (cnt) cnt.textContent = total > 0 ? `${total} résultat${total > 1 ? 's' : ''}` : 'Aucun résultat';
         if (total > 50)
-            el.innerHTML += `<p class="text-xs text-slate-600 text-center py-3">${total} prélèvements — affichage limité à 50</p>`;
-    } catch(e) { el.innerHTML = '<p class="text-red-400 text-sm text-center py-8">Erreur.</p>'; }
+            el.innerHTML += `<p class="text-xs text-[var(--muted-dim)] text-center py-3">${total} prélèvements — affichage limité à 50</p>`;
+    } catch(e) { el.innerHTML = '<p class="text-[var(--danger)] text-sm text-center py-8">Erreur.</p>'; }
 }
 
 function resetFilters() {
@@ -899,22 +966,22 @@ function resetFilters() {
 // EXPLOIT — Audit (role="exploit" uniquement)
 // ════════════════════════════════════════
 function auditTable(items) {
-    if (!items.length) return '<p class="text-slate-500 text-sm text-center py-10">Aucune entrée.</p>';
+    if (!items.length) return '<p class="text-[var(--muted)] text-sm text-center py-10">Aucune entrée.</p>';
     const cols = ['Horodatage', 'Acteur', 'Rôle', 'Action', 'Ressource', 'Statut', 'IP', 'Détail'];
     return `<div class="overflow-x-auto">
     <table class="w-full text-sm">
-        <thead><tr class="text-xs text-slate-500 uppercase tracking-wide border-b border-slate-700">
+        <thead><tr class="text-xs text-[var(--muted)] uppercase tracking-wide border-b border-[var(--surface2)]">
             ${cols.map(c => `<th class="text-left px-6 py-3">${c}</th>`).join('')}
         </tr></thead>
-        <tbody>${items.map(l => `<tr class="border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors">
-                <td class="px-6 py-3 text-slate-400 whitespace-nowrap">${new Date(l.timestamp).toLocaleString('fr-FR')}</td>
-                <td class="px-6 py-3 font-medium text-slate-300">${l.actor_type}${l.actor_id ? ` · ${l.actor_id}` : ''}</td>
-                <td class="px-6 py-3 text-slate-400">${l.actor_role || '—'}</td>
-                <td class="px-6 py-3 font-mono text-xs text-slate-300">${l.action}</td>
-                <td class="px-6 py-3 text-slate-500 font-mono text-xs">${l.resource_id || '—'}</td>
-                <td class="px-6 py-3 ${l.status_code >= 400 ? 'text-red-400' : 'text-slate-400'}">${l.status_code}</td>
-                <td class="px-6 py-3 text-slate-500 font-mono text-xs">${l.ip_address || '—'}</td>
-                <td class="px-6 py-3 text-slate-500 text-xs truncate max-w-xs">${l.detail || '—'}</td>
+        <tbody>${items.map(l => `<tr class="border-b border-[#252238]/70 hover:bg-[#252238]/50 transition-colors">
+                <td class="px-6 py-3 text-[var(--muted)] whitespace-nowrap">${new Date(l.timestamp).toLocaleString('fr-FR')}</td>
+                <td class="px-6 py-3 font-medium text-[var(--ink)]">${l.actor_type}${l.actor_id ? ` · ${l.actor_id}` : ''}</td>
+                <td class="px-6 py-3 text-[var(--muted)]">${l.actor_role || '—'}</td>
+                <td class="px-6 py-3 font-mono text-xs text-[var(--ink)]">${l.action}</td>
+                <td class="px-6 py-3 text-[var(--muted)] font-mono text-xs">${l.resource_id || '—'}</td>
+                <td class="px-6 py-3 ${l.status_code >= 400 ? 'text-[var(--danger)]' : 'text-[var(--muted)]'}">${l.status_code}</td>
+                <td class="px-6 py-3 text-[var(--muted)] font-mono text-xs">${l.ip_address || '—'}</td>
+                <td class="px-6 py-3 text-[var(--muted)] text-xs truncate max-w-xs">${l.detail || '—'}</td>
             </tr>`).join('')}</tbody>
     </table></div>`;
 }
@@ -939,8 +1006,8 @@ async function loadAudit() {
         const cnt = document.getElementById('f-audit-count');
         if (cnt) cnt.textContent = total > 0 ? `${total} entrée${total > 1 ? 's' : ''}` : 'Aucune entrée';
         if (total > 50)
-            el.innerHTML += `<p class="text-xs text-slate-600 text-center py-3">${total} entrées — affichage limité à 50</p>`;
-    } catch(e) { el.innerHTML = '<p class="text-red-400 text-sm text-center py-8">Erreur.</p>'; }
+            el.innerHTML += `<p class="text-xs text-[var(--muted-dim)] text-center py-3">${total} entrées — affichage limité à 50</p>`;
+    } catch(e) { el.innerHTML = '<p class="text-[var(--danger)] text-sm text-center py-8">Erreur.</p>'; }
 }
 
 function resetAuditFilters() {
@@ -961,32 +1028,33 @@ async function loadClients() {
     try {
         const clients = await api('GET', '/admin/clients');
         if (!clients.length) {
-            el.innerHTML = '<p class="text-slate-500 text-sm text-center py-10">Aucun client.</p>'; return;
+            el.innerHTML = '<p class="text-[var(--muted)] text-sm text-center py-10">Aucun client.</p>'; return;
         }
         el.innerHTML = clients.map(c => `
-            <div class="px-5 py-4 border-b border-slate-700/50 last:border-0 flex items-center justify-between hover:bg-slate-700/30 transition-colors gap-3">
+            <div class="px-5 py-4 border-b border-[#252238]/70 last:border-0 flex items-center justify-between hover:bg-[#252238]/50 transition-colors gap-3">
                 <div class="flex items-center gap-3 min-w-0">
                     <div class="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm shrink-0
-                        ${c.actif ? 'bg-blue-900/60 text-blue-300' : 'bg-slate-700 text-slate-500'}">
+                        ${c.actif ? 'bg-[#8b7ff0]/20 text-[var(--accent)]' : 'bg-[var(--surface2)] text-[var(--muted)]'}">
                         ${(c.denomination || '?')[0]}
                     </div>
                     <div class="min-w-0">
-                        <p class="font-medium text-slate-200 truncate">${c.denomination}</p>
-                        <p class="text-xs text-slate-500">${c.id_client} · ${c.nb_prelevements} prélèvement${c.nb_prelevements !== 1 ? 's' : ''}</p>
+                        <p class="font-medium text-[var(--ink)] truncate">${c.denomination}</p>
+                        <p class="text-xs text-[var(--muted)]">${c.id_client} · ${c.nb_prelevements} prélèvement${c.nb_prelevements !== 1 ? 's' : ''}</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2 shrink-0">
-                    <span class="text-xs px-2 py-0.5 rounded-full ${c.actif ? 'bg-green-900/50 text-green-400' : 'bg-slate-700 text-slate-500'}">
+                    <span class="text-xs px-2 py-0.5 rounded-full ${c.actif ? 'bg-[#4ade80]/18 text-[var(--success)]' : 'bg-[var(--surface2)] text-[var(--muted)]'}">
                         ${c.actif ? 'Actif' : 'Inactif'}
                     </span>
-                    <span class="text-xs text-slate-600 font-mono hidden sm:block">${c.api_key_hint || '—'}</span>
+                    <span class="text-xs text-[var(--muted-dim)] font-mono hidden sm:block">${c.api_key_hint || '—'}</span>
                     <button onclick="genKey('${c.id}','${c.id_client}')"
-                        class="text-xs bg-slate-700 hover:bg-blue-900/60 hover:text-blue-300 text-slate-400 px-2.5 py-1.5 rounded-lg transition-colors">
-                        🔑 Nouvelle clé
+                        class="text-xs bg-[var(--surface2)] hover:bg-[#8b7ff0]/20 hover:text-[var(--accent)] text-[var(--muted)] px-2.5 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="7.5" cy="15.5" r="4.5"/><path d="m11 12 7-7"/><path d="m15 8 3 3"/><path d="m17 6 3 3"/></svg>
+                        Nouvelle clé
                     </button>
                 </div>
             </div>`).join('');
-    } catch(e) { el.innerHTML = '<p class="text-red-400 text-sm text-center py-8">Erreur.</p>'; }
+    } catch(e) { el.innerHTML = '<p class="text-[var(--danger)] text-sm text-center py-8">Erreur.</p>'; }
 }
 
 async function createClient() {
@@ -995,20 +1063,20 @@ async function createClient() {
     const adr = document.getElementById('nc-adr').value.trim();
     const res = document.getElementById('nc-res');
     if (!id || !den || !adr) {
-        res.textContent = '⚠ Tous les champs sont requis.';
-        res.className = 'mt-3 text-xs rounded-lg px-3 py-2 bg-yellow-900/30 border border-yellow-800 text-yellow-300';
+        res.textContent = 'Tous les champs sont requis.';
+        res.className = 'mt-3 text-xs rounded-lg px-3 py-2 bg-[#f0b355]/16 border border-[#f0b355]/30 text-[var(--warning)]';
         res.classList.remove('hidden'); return;
     }
     try {
         await api('POST', '/admin/clients', { id_client: id, denomination: den, adresse: adr, rgpd_consent: true });
-        res.textContent = `✅ Client "${id}" créé. Cliquez sur "Nouvelle clé" pour générer sa clé API.`;
-        res.className = 'mt-3 text-xs rounded-lg px-3 py-2 bg-green-900/30 border border-green-800 text-green-300';
+        res.textContent = `Client "${id}" créé. Cliquez sur "Nouvelle clé" pour générer sa clé API.`;
+        res.className = 'mt-3 text-xs rounded-lg px-3 py-2 bg-[#4ade80]/14 border border-[#4ade80]/30 text-[var(--success)]';
         res.classList.remove('hidden');
         ['nc-id', 'nc-den', 'nc-adr'].forEach(i => document.getElementById(i).value = '');
         loadClients();
     } catch(e) {
-        res.textContent = `⚠ ${e.error || 'Erreur.'}`;
-        res.className = 'mt-3 text-xs rounded-lg px-3 py-2 bg-red-900/30 border border-red-800 text-red-300';
+        res.textContent = e.error || 'Erreur.';
+        res.className = 'mt-3 text-xs rounded-lg px-3 py-2 bg-[#f2735f]/15 border border-[#f2735f]/30 text-[var(--danger)]';
         res.classList.remove('hidden');
     }
 }
@@ -1017,17 +1085,18 @@ async function genKey(clientId, clientLabel) {
     try {
         const d = await api('POST', `/admin/clients/${clientId}/apikey`);
         openModal(
-            `🔑 Clé API — ${d.id_client}`,
-            '⚠ Copiez cette clé maintenant. Elle ne sera plus jamais affichée.',
-            `<div class="bg-[#0f172a] border border-slate-700 rounded-xl p-4 font-mono text-sm text-green-300 break-all select-all leading-relaxed">
+            `Clé API — ${d.id_client}`,
+            'Copiez cette clé maintenant. Elle ne sera plus jamais affichée.',
+            `<div class="bg-[var(--ground)] border border-[var(--surface2)] rounded-xl p-4 font-mono text-sm text-[var(--success)] break-all select-all leading-relaxed">
                 ${d.api_key}
             </div>
             <button id="copy-btn"
-                onclick="navigator.clipboard.writeText('${d.api_key}').then(()=>{ document.getElementById('copy-btn').textContent='✅ Copié !'; })"
-                class="mt-3 w-full bg-blue-600 hover:bg-blue-500 text-white rounded-xl py-2.5 text-sm font-semibold transition-colors">
-                📋 Copier la clé
+                onclick="navigator.clipboard.writeText('${d.api_key}').then(()=>{ document.getElementById('copy-btn').innerHTML = ICON_CHECK + 'Copié !'; })"
+                class="mt-3 w-full bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded-xl py-2.5 text-sm font-semibold transition-colors inline-flex items-center justify-center gap-1.5">
+                <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/></svg>
+                Copier la clé
             </button>
-            <p class="text-xs text-slate-500 text-center mt-2">Générée le ${fdate(d.generated_at)}</p>`
+            <p class="text-xs text-[var(--muted)] text-center mt-2">Générée le ${fdate(d.generated_at)}</p>`
         );
         loadClients();
     } catch(e) { alert(e.error || 'Erreur génération clé.'); }
@@ -1062,31 +1131,31 @@ async function loadCliDashList() {
         // Re-sélectionner le client courant si présent
         if (_cdSelected) selectClient(_cdSelected.id);
     } catch(e) {
-        el.innerHTML = '<p class="text-red-400 text-xs text-center py-6">Erreur.</p>';
+        el.innerHTML = '<p class="text-[var(--danger)] text-xs text-center py-6">Erreur.</p>';
     }
 }
 
 function renderCliList(clients) {
     const el = document.getElementById('cd-list');
     if (!clients.length) {
-        el.innerHTML = '<p class="text-slate-500 text-xs text-center py-6">Aucun client.</p>';
+        el.innerHTML = '<p class="text-[var(--muted)] text-xs text-center py-6">Aucun client.</p>';
         return;
     }
     el.innerHTML = clients.map(c => `
-        <div class="cd-cli-row px-4 py-3 cursor-pointer border-b border-slate-700/40 last:border-0 hover:bg-slate-700/40 transition-colors flex items-center gap-3"
+        <div class="cd-cli-row px-4 py-3 cursor-pointer border-b border-[#252238]/60 last:border-0 hover:bg-[#252238]/60 transition-colors flex items-center gap-3 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--accent)]"
              data-id="${c.id}" data-label="${c.denomination}"
              role="button" tabindex="0"
              onclick="selectClient('${c.id}')"
              onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectClient('${c.id}')}">
             <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shrink-0
-                ${c.actif ? 'bg-blue-900/60 text-blue-300' : 'bg-slate-700 text-slate-500'}">
+                ${c.actif ? 'bg-[#8b7ff0]/20 text-[var(--accent)]' : 'bg-[var(--surface2)] text-[var(--muted)]'}">
                 ${(c.denomination||'?')[0].toUpperCase()}
             </div>
             <div class="min-w-0 flex-1">
-                <p class="text-sm text-slate-200 font-medium truncate">${c.denomination}</p>
-                <p class="text-[10px] text-slate-500">${c.id_client} · ${c.nb_prelevements} prélt.</p>
+                <p class="text-sm text-[var(--ink)] font-medium truncate">${c.denomination}</p>
+                <p class="text-[10px] text-[var(--muted)]">${c.id_client} · ${c.nb_prelevements} prélt.</p>
             </div>
-            <span class="w-2 h-2 rounded-full shrink-0 ${c.actif ? 'bg-green-500' : 'bg-slate-600'}"></span>
+            <span class="w-2 h-2 rounded-full shrink-0 ${c.actif ? 'bg-[var(--success)]' : 'bg-[var(--surface2)]'}"></span>
         </div>`).join('');
 }
 
@@ -1102,9 +1171,9 @@ async function selectClient(clientDbId) {
     // Highlight sélection
     document.querySelectorAll('.cd-cli-row').forEach(r => {
         const sel = r.dataset.id === clientDbId;
-        r.classList.toggle('bg-slate-700/60', sel);
+        r.classList.toggle('bg-[#252238]/70', sel);
         r.classList.toggle('border-l-2',      sel);
-        r.classList.toggle('border-blue-500', sel);
+        r.classList.toggle('border-[var(--accent)]', sel);
     });
 
     document.getElementById('cd-empty').classList.add('hidden');
@@ -1127,7 +1196,7 @@ async function selectClient(clientDbId) {
         const statusEl = document.getElementById('cd-status');
         statusEl.textContent = cli.actif ? 'Actif' : 'Inactif';
         statusEl.className = `text-xs px-2.5 py-1 rounded-full font-medium shrink-0 ${
-            cli.actif ? 'bg-green-900/50 text-green-400' : 'bg-slate-700 text-slate-500'}`;
+            cli.actif ? 'bg-[#4ade80]/18 text-[var(--success)]' : 'bg-[var(--surface2)] text-[var(--muted)]'}`;
     }
 
     // Charger les prélèvements du client (la route attend l'id_client métier, pas l'id DB)
@@ -1150,7 +1219,7 @@ async function selectClient(clientDbId) {
         const pct = rate ?? 0;
         document.getElementById('cd-bar').style.width = `${pct}%`;
         document.getElementById('cd-bar').className   = `h-full rounded-full transition-all duration-700 ${
-            pct >= 70 ? 'bg-green-500' : pct >= 40 ? 'bg-yellow-500' : 'bg-red-500'}`;
+            pct >= 70 ? 'bg-[var(--success)]' : pct >= 40 ? 'bg-[var(--warning)]' : 'bg-[var(--danger)]'}`;
         document.getElementById('cd-bar-label').textContent = `${potables} potables / ${nonPot} non potables`;
 
         // Sources
@@ -1159,8 +1228,8 @@ async function selectClient(clientDbId) {
         document.getElementById('cd-sources').innerHTML = Object.entries(bySource).map(([src, n]) => `
             <div class="flex items-center justify-between">
                 ${sourceBadge(src)}
-                <span class="text-sm font-semibold text-slate-200">${n}</span>
-            </div>`).join('') || '<p class="text-slate-600 text-xs">—</p>';
+                <span class="text-sm font-semibold text-[var(--ink)]">${n}</span>
+            </div>`).join('') || '<p class="text-[var(--muted-dim)] text-xs">—</p>';
 
         // Prélèvements récents (5 derniers)
         const recent = [...items].sort((a,b) =>
@@ -1170,8 +1239,8 @@ async function selectClient(clientDbId) {
 
     } catch(e) {
         const msg = e?.error || e?.message || JSON.stringify(e) || 'Erreur inconnue';
-        document.getElementById('cd-prevs').innerHTML = `<p class="text-red-400 text-xs text-center py-6">${msg}</p>`;
-        document.getElementById('cd-sources').innerHTML = '<p class="text-red-400 text-xs">—</p>';
+        document.getElementById('cd-prevs').innerHTML = `<p class="text-[var(--danger)] text-xs text-center py-6">${msg}</p>`;
+        document.getElementById('cd-sources').innerHTML = '<p class="text-[var(--danger)] text-xs">—</p>';
     }
 }
 
@@ -1191,7 +1260,7 @@ async function loadApiExplorer() {
         document.getElementById('api-spec-ver').textContent = ver ? `v${ver}` : '';
         renderApiExplorer(_apiSpec);
     } catch(e) {
-        el.innerHTML = `<p class="text-red-400 text-sm text-center py-8">Impossible de charger la spécification API (${e.message}).</p>`;
+        el.innerHTML = `<p class="text-[var(--danger)] text-sm text-center py-8">Impossible de charger la spécification API (${e.message}).</p>`;
     }
 }
 
@@ -1213,12 +1282,12 @@ function renderApiExplorer(spec) {
     });
     document.getElementById('api-endpoints').innerHTML = sorted.map(([tag, eps]) => `
         <div class="api-group">
-            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 px-1">${tag}</p>
+            <p class="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest mb-2 px-1">${tag}</p>
             <div class="space-y-1.5">${eps.map(ep => renderEndpointCard(ep, spec)).join('')}</div>
-        </div>`).join('') || '<p class="text-slate-500 text-center py-10 text-sm">Aucun endpoint.</p>';
+        </div>`).join('') || '<p class="text-[var(--muted)] text-center py-10 text-sm">Aucun endpoint.</p>';
 }
 
-const _MC = { get:'bg-blue-600', post:'bg-emerald-600', put:'bg-orange-500', delete:'bg-red-600', patch:'bg-yellow-600' };
+const _MC = { get:'bg-[var(--accent)]', post:'bg-emerald-600', put:'bg-orange-500', delete:'bg-red-600', patch:'bg-yellow-600' };
 
 function renderEndpointCard({ path, method, op }, spec) {
     const id = `ep_${method}_${path}`.replace(/[^a-z0-9]/gi,'_');
@@ -1231,52 +1300,55 @@ function renderEndpointCard({ path, method, op }, spec) {
         try { defaultBody = JSON.stringify(_schemaDef(bodyP.schema, spec), null, 2); } catch(_) {}
     }
     return `
-    <div class="api-card bg-slate-800 border border-slate-700 rounded-xl overflow-hidden" id="${id}">
+    <div class="api-card bg-[var(--surface)] border border-[var(--surface2)] rounded-xl overflow-hidden" id="${id}">
         <div onclick="toggleApiEp('${id}')"
              onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleApiEp('${id}')}"
              role="button" tabindex="0"
-             class="px-4 py-3 flex items-center gap-3 cursor-pointer hover:bg-slate-700/40 transition-colors select-none">
-            <span class="shrink-0 text-[10px] font-bold font-mono uppercase text-white text-center w-16 py-0.5 rounded ${_MC[method]||'bg-slate-600'}">${method}</span>
-            <span class="font-mono text-sm text-slate-200 flex-1 truncate">${path}</span>
-            <span class="text-slate-500 text-xs hidden md:block shrink-0 truncate max-w-xs">${op.summary||''}</span>
-            <span class="text-slate-600 text-xs shrink-0" id="${id}__arr">▼</span>
+             class="px-4 py-3 flex items-center gap-3 cursor-pointer hover:bg-[#252238]/60 transition-colors select-none focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--accent)]">
+            <span class="shrink-0 text-[10px] font-bold font-mono uppercase text-white text-center w-16 py-0.5 rounded ${_MC[method]||'bg-[var(--surface2)]'}">${method}</span>
+            <span class="font-mono text-sm text-[var(--ink)] flex-1 truncate">${path}</span>
+            <span class="text-[var(--muted)] text-xs hidden md:block shrink-0 truncate max-w-xs">${op.summary||''}</span>
+            <span class="text-[var(--muted-dim)] shrink-0 inline-flex transition-transform duration-200" id="${id}__arr" aria-hidden="true">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+            </span>
         </div>
-        <div id="${id}__body" class="hidden border-t border-slate-700 p-5 space-y-4">
-            ${op.description ? `<p class="text-slate-400 text-sm">${op.description}</p>` : ''}
+        <div id="${id}__body" class="hidden border-t border-[var(--surface2)] p-5 space-y-4">
+            ${op.description ? `<p class="text-[var(--muted)] text-sm">${op.description}</p>` : ''}
             ${pathPs.length ? `
             <div>
-                <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-2">Paramètres de chemin</p>
+                <p class="text-[10px] font-semibold text-[var(--muted)] uppercase tracking-wide mb-2">Paramètres de chemin</p>
                 <div class="space-y-2">${pathPs.map(p => `
                     <div class="flex items-center gap-3">
-                        <label for="${id}__pp__${p.name}" class="font-mono text-xs text-yellow-300 w-32 shrink-0">{${p.name}}</label>
+                        <label for="${id}__pp__${p.name}" class="font-mono text-xs text-[var(--warning)] w-32 shrink-0">{${p.name}}</label>
                         <input id="${id}__pp__${p.name}" type="text" placeholder="${p.description||p.name}"
-                            class="flex-1 bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 font-mono transition-colors">
+                            class="flex-1 bg-[var(--ground)] border border-[var(--surface2)] rounded-lg px-3 py-2 text-sm text-[var(--ink)] placeholder-[var(--muted-dim)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] font-mono transition-colors">
                     </div>`).join('')}
                 </div>
             </div>` : ''}
             ${queryPs.length ? `
             <div>
-                <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-2">Paramètres de requête</p>
+                <p class="text-[10px] font-semibold text-[var(--muted)] uppercase tracking-wide mb-2">Paramètres de requête</p>
                 <div class="grid grid-cols-2 gap-2">${queryPs.map(p => `
                     <div>
-                        <label for="${id}__qp__${p.name}" class="text-[10px] font-mono text-slate-500 block mb-1">${p.name}${p.required?' <span class="text-red-400">*</span>':''}</label>
+                        <label for="${id}__qp__${p.name}" class="text-[10px] font-mono text-[var(--muted)] block mb-1">${p.name}${p.required?' <span class="text-[var(--danger)]">*</span>':''}</label>
                         <input id="${id}__qp__${p.name}" type="text" placeholder="${p.description||''}"
-                            class="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 font-mono transition-colors">
+                            class="w-full bg-[var(--ground)] border border-[var(--surface2)] rounded-lg px-3 py-2 text-sm text-[var(--ink)] placeholder-[var(--muted-dim)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] font-mono transition-colors">
                     </div>`).join('')}
                 </div>
             </div>` : ''}
             ${bodyP ? `
             <div>
-                <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-2">Corps JSON</p>
+                <p class="text-[10px] font-semibold text-[var(--muted)] uppercase tracking-wide mb-2">Corps JSON</p>
                 <textarea id="${id}__bj" rows="7" spellcheck="false"
-                    class="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-green-300 font-mono focus:outline-none focus:border-blue-500 resize-y transition-colors">${defaultBody}</textarea>
+                    class="w-full bg-[var(--ground)] border border-[var(--surface2)] rounded-lg px-3 py-2.5 text-sm text-[#86efac] font-mono focus:outline-none focus:ring-2 focus:ring-[var(--accent)] resize-y transition-colors">${defaultBody}</textarea>
             </div>` : ''}
             <div class="flex items-center gap-3 pt-1">
                 <button onclick="tryApiEp('${id}','${method}','${path}')"
-                    class="bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white rounded-lg px-5 py-2 text-sm font-semibold transition-colors">
-                    ▶ Envoyer
+                    class="bg-[var(--accent)] hover:bg-[var(--accent-hover)] active:bg-[var(--accent-active)] text-white rounded-lg px-5 py-2 text-sm font-semibold transition-colors inline-flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7Z"/></svg>
+                    Envoyer
                 </button>
-                <span class="text-xs text-slate-600">Auth injectée depuis la session</span>
+                <span class="text-xs text-[var(--muted-dim)]">Auth injectée depuis la session</span>
             </div>
             <div id="${id}__res" class="hidden" aria-live="polite"></div>
         </div>
@@ -1306,7 +1378,7 @@ function toggleApiEp(id) {
     const arrow = document.getElementById(`${id}__arr`);
     const open  = !body.classList.contains('hidden');
     body.classList.toggle('hidden', open);
-    arrow.textContent = open ? '▼' : '▲';
+    arrow.classList.toggle('rotate-180', !open);
 }
 
 async function tryApiEp(id, method, pathTpl) {
@@ -1343,15 +1415,15 @@ async function tryApiEp(id, method, pathTpl) {
         const text = await r.text();
         let pretty = text;
         try { pretty = JSON.stringify(JSON.parse(text), null, 2); } catch(_) {}
-        const sc = r.status < 300 ? 'text-green-400' : r.status < 500 ? 'text-yellow-400' : 'text-red-400';
+        const sc = r.status < 300 ? 'text-[var(--success)]' : r.status < 500 ? 'text-[var(--warning)]' : 'text-[var(--danger)]';
         resEl.innerHTML = `
             <div class="flex items-center gap-3 mb-2 pt-1">
                 <span class="font-mono font-bold text-sm ${sc}">${r.status} ${r.statusText}</span>
-                <span class="text-xs text-slate-500">${ms} ms</span>
+                <span class="text-xs text-[var(--muted)]">${ms} ms</span>
             </div>
-            <pre class="bg-[#0f172a] border border-slate-700 rounded-lg p-4 text-xs text-slate-300 font-mono overflow-x-auto max-h-72 overflow-y-auto">${_esc(pretty)}</pre>`;
+            <pre class="bg-[var(--ground)] border border-[var(--surface2)] rounded-lg p-4 text-xs text-[var(--ink)] font-mono overflow-x-auto max-h-72 overflow-y-auto">${_esc(pretty)}</pre>`;
     } catch(e) {
-        resEl.innerHTML = `<p class="text-red-400 text-sm py-2">Erreur réseau : ${e.message}</p>`;
+        resEl.innerHTML = `<p class="text-[var(--danger)] text-sm py-2">Erreur réseau : ${e.message}</p>`;
     }
 }
 
