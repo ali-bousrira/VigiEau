@@ -12,6 +12,8 @@ competences: [C6, C7, C8]
 
 # Documentation technique — Service OCR (E2)
 
+**Dépôt du projet (public)** : https://github.com/ali-bousrira/VigiEau
+
 ## Objectif du composant
 
 Extraire automatiquement les 9 mesures physico-chimiques (`ph`,

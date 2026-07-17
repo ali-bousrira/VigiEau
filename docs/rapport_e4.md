@@ -14,6 +14,8 @@ competences: [C14, C15, C16, C17, C18, C19]
 
 # Rapport professionnel — E4 : Application
 
+**Dépôt du projet (public)** : https://github.com/ali-bousrira/VigiEau
+
 ## Contexte
 
 Trois profils très différents doivent utiliser la même plateforme sans se

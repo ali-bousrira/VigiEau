@@ -15,6 +15,8 @@ competences: [C1, C2, C3, C4, C5]
 
 # Rapport professionnel — E1 : Collecte, stockage et mise à disposition des données
 
+**Dépôt du projet (public)** : https://github.com/ali-bousrira/VigiEau
+
 ## Présentation du projet
 
 VigiEau centralise le suivi de la qualité de l'eau pour des collectivités

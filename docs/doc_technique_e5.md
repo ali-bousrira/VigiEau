@@ -13,6 +13,8 @@ competences: [C20, C21]
 
 # Documentation technique — Monitorage et incident (E5)
 
+**Dépôt du projet (public)** : https://github.com/ali-bousrira/VigiEau
+
 ## Objectif
 
 Donner à l'équipe d'exploitation une visibilité sur la santé de la

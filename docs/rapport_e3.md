@@ -13,6 +13,8 @@ competences: [C9, C10, C11, C12, C13]
 
 # Rapport professionnel — E3 : Modèle en production
 
+**Dépôt du projet (public)** : https://github.com/ali-bousrira/VigiEau
+
 ## Contexte
 
 Le modèle de classification de la potabilité (XGBoost, entraîné sur le
