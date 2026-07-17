@@ -76,6 +76,9 @@ class IngestionSource(str, enum.Enum):
     OCR      = "ocr"       # extraction fiche PDF/image
     API      = "api"       # dépôt programmatique sans OCR
     OPENDATA = "opendata"  # import automatisé depuis une source ouverte (ex. Hub'Eau)
+    SCRAPING = "scraping"  # extraction depuis une page web (ex. Wikipedia)
+    BIGDATA  = "bigdata"   # import depuis un système big data (ex. DuckDB/Parquet)
+    LEGACY_DB = "legacy_db"  # import depuis une base de données tierce (ex. ancien système)
 
 
 # ── Clients (collectivités) ──────────────────────────────────────────────────
