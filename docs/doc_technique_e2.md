@@ -5,13 +5,14 @@ competences: [C6, C7, C8]
 ---
 
 > Brouillon technique généré à partir du code du dépôt (`ocr_service.py`,
-> `routes.py`, `tests/`) — factuel et vérifiable, sans reformulation
-> narrative. Voir [[architecture]] pour le diagramme de séquence complet
-> du pipeline OCR → prédiction.
+> `routes.py`, `tests/`) — factuel et vérifiable. Structure organisée par
+> compétence (C6, C7, C8), conforme à la consigne du REAC. Voir
+> [[architecture]] pour le diagramme de séquence complet du pipeline
+> OCR → prédiction.
 
 # Documentation technique — Service OCR (E2)
 
-## 1. Objectif du composant
+## Objectif du composant
 
 Extraire automatiquement les 9 mesures physico-chimiques (`ph`,
 `Hardness`, `Solids`, `Chloramines`, `Sulfate`, `Conductivity`,
@@ -19,9 +20,20 @@ Extraire automatiquement les 9 mesures physico-chimiques (`ph`,
 (date, lieu, observations) d'une fiche de laboratoire déposée en image ou
 PDF, pour alimenter le pipeline de prédiction sans ressaisie manuelle.
 
-## 2. Veille comparative et choix (C7)
+**Besoin client** (fictif, ancré sur le projet) : les collectivités
+clientes reçoivent leurs analyses d'un laboratoire externe sous forme de
+fiche PDF ou scannée, et les ressaisissaient manuellement avant de pouvoir
+les exploiter — source d'erreurs de saisie et de délai. Le besoin est
+d'automatiser cette extraction sans dépendre d'un unique fournisseur.
 
-Comparatif formalisé dans `ocr_service.py:4-17` (docstring du module) :
+---
+
+## C6 — Réaliser une veille technique et réglementaire
+
+Veille menée sur les services d'extraction de texte/OCR disponibles,
+en réponse au besoin client ci-dessus (extraction automatique de fiches
+laboratoire). Comparatif formalisé dans `ocr_service.py:4-17` (docstring
+du module) :
 
 | Solution | Gratuit/mois | PDF natif | Remarques |
 |---|---|---|---|
@@ -31,12 +43,38 @@ Comparatif formalisé dans `ocr_service.py:4-17` (docstring du module) :
 | Tesseract (OSS) | Illimité | Non direct | Auto-hébergé, latence supplémentaire |
 | Claude Vision | Selon usage | Via images | Compréhension sémantique supérieure |
 
+Sources de veille : documentation officielle de chaque fournisseur,
+comparatifs publics de services OCR, et test manuel direct (envoi de
+fiches d'exemple à chaque service candidat) plutôt qu'une évaluation
+purement théorique.
+
+**Accessibilité** : ce comparatif lui-même, comme tout document de veille
+partagé en interne, suit les règles de bon sens du reste des livrables
+(taille de police, contraste) plutôt qu'un standard formel dédié — pas de
+norme d'accessibilité spécifique aux documents de veille technique.
+
+---
+
+## C7 — Identifier des services d'IA préexistants
+
 **Décision** : OCR.space comme service primaire (plan gratuit suffisant
 pour un MVP, API REST simple, support PDF natif), **Claude Vision comme
 repli** — pas un second choix théorique mais un vrai composant actif du
-pipeline (voir §3).
+pipeline (voir C8).
 
-## 3. Architecture et paramétrage (C8)
+**Éco-responsabilité** : le choix d'un service OCR spécialisé et léger
+(OCR.space) comme option *primaire*, plutôt que de router systématiquement
+chaque extraction vers un modèle multimodal généraliste, limite le
+recours au modèle le plus coûteux en calcul (Claude Vision) aux seuls cas
+où le premier échoue ou est indisponible (voir C8) — un choix
+d'architecture qui va dans le sens de la sobriété plutôt que l'inverse.
+Je n'ai pas de rapport d'impact carbone officiel pour OCR.space à citer ;
+je documente honnêtement cette limite plutôt que d'affirmer une donnée
+que je n'ai pas vérifiée.
+
+---
+
+## C8 — Paramétrer un service d'IA
 
 Point d'entrée unique : `extract_from_document(file_bytes, mime)`
 (`ocr_service.py:194-230`).
@@ -73,8 +111,13 @@ flowchart TD
 - **Configuration** : variables d'environnement `OCR_SPACE_API_KEY` et/ou
   `ANTHROPIC_API_KEY` (au moins une requise — voir `README.md`,
   section Variables d'environnement). Aucune clé en dur dans le code.
+- **Monitorage** : le service n'a pas de dashboard dédié, mais chaque
+  extraction est journalisée (`audit_logs`, actions `client_ingest_ocr*`)
+  et comptabilisée dans les métriques applicatives génériques
+  (`request_metrics`, voir [[doc_technique_e5]] §C20) — pas un monitorage
+  de modèle IA au sens MLflow (ça, c'est C11, voir [[rapport_e3]]).
 
-## 4. Normalisation des données
+### Normalisation des données
 
 `_normalise()` (`ocr_service.py:166-189`) — appelée après les deux
 stratégies d'extraction, garantit un contrat de sortie stable :
@@ -84,10 +127,10 @@ stratégies d'extraction, garantit un contrat de sortie stable :
   entrée dans `warnings` (pas d'exception, pas de valeur devinée) ;
   cohérent avec la consigne du prompt d'extraction : *"Si valeur floue →
   null + warning. Ne devine pas."* (`ocr_service.py:66`) ;
-  ` `date_prelevement`, `id_client`, `lieu`, `observations`, `raw_text`
+  `date_prelevement`, `id_client`, `lieu`, `observations`, `raw_text`
   toujours présents dans le dict retourné (valeurs par défaut `None`/`""`).
 
-## 5. Intégration API et gestion d'erreur
+### Intégration API et gestion d'erreur
 
 Deux routes consomment `extract_from_document()` (`routes.py`) :
 
@@ -104,24 +147,23 @@ Codes retour (`routes.py:484-495`) :
 | Aucun service OCR disponible (`RuntimeError`) | 503 | `extract_from_document()` |
 | Erreur inattendue pendant l'extraction | 500 | `except Exception`, journalisé via `logger.exception` |
 
-## 6. Tests
+### Tests
 
 12 tests touchent directement ce composant : 2 dans `tests/test_api.py`
 (`test_ingest_ocr_sans_fichier`, `test_ingest_ocr_type_invalide` — cas
 d'erreur 400) et 10 dans `tests/test_e2e.py` (pipeline complet OCR →
-prélèvement → prédiction, OCR et modèle mockés — voir `tests/test_e2e.py:65-66`
-pour le point de mock `mlflow.xgboost.load_model`/`joblib.load`). Aucun
-appel réseau réel dans la suite `pytest` : OCR.space et Claude Vision ne
-sont jamais sollicités en CI.
+prélèvement → prédiction, OCR et modèle mockés). Aucun appel réseau réel
+dans la suite `pytest` : OCR.space et Claude Vision ne sont jamais
+sollicités en CI.
 
-## 7. Exemples fournis
+### Exemples fournis
 
 `samples/` (voir `samples/README.md`) : `fiche_labo_anonymisee.txt` (fiche
 complète, texte brut anonymisé) et `exemple_extraction_ocr.json` (résultat
 attendu), avec une commande `curl` de démonstration contre
 `/ingest/ocr-and-predict`.
 
-## 8. Limites connues
+### Limites connues
 
 - Pas de retry/backoff sur l'appel OCR.space — un seul essai, puis bascule
   directe sur Claude Vision (stratégie de repli, pas de nouvelle tentative
