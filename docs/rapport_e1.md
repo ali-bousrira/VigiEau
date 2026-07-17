@@ -107,32 +107,36 @@ un contrôle d'accès par clé API pour les clients et par token Bearer
 
 ## 5. Difficultés rencontrées
 
-**Le mapping Hub'Eau n'a pas de solution parfaite.** Le jeu de données
-d'entraînement du modèle (Kaggle) et le contrôle sanitaire français ne
-mesurent pas exactement les mêmes paramètres. J'ai dû faire des choix
-assumés plutôt que d'attendre une correspondance exacte qui n'existe pas :
-`Chloramines` est approximée par le chlore total mesuré (proxy, pas une
-équivalence chimique), et `Solids` (matières dissoutes totales) n'a
-simplement aucun équivalent dans les paramètres suivis en France — la
-feature reste `None` pour toute donnée Hub'Eau, ce qui limite
-mécaniquement les prédictions automatiques sur cette source (`Solids`
-manque toujours). J'ai vérifié cette limite par un vrai appel réseau
-plutôt que de la déduire de la documentation Hub'Eau, pour être sûr de ne
-pas inventer une correspondance qui n'existe pas.
+Le mapping Hub'Eau, je savais dès le départ qu'il ne serait pas parfait —
+le jeu de données Kaggle qui a servi à entraîner le modèle et le contrôle
+sanitaire français ne mesurent tout simplement pas les mêmes paramètres.
+Ce que je n'avais pas anticipé, c'est à quel point certains écarts
+seraient tranchés : `Chloramines` s'approxime tant bien que mal par le
+chlore total mesuré (un proxy, pas une équivalence chimique — je le
+note explicitement pour ne pas laisser croire à une correspondance
+propre), mais `Solids` (matières dissoutes totales) n'a purement et
+simplement aucun équivalent suivi en France. Cette feature reste `None`
+pour toute donnée Hub'Eau, point final — ce qui limite mécaniquement les
+prédictions automatiques sur cette source. J'aurais pu me contenter de le
+déduire en lisant la documentation Hub'Eau, mais j'ai préféré vérifier
+par un vrai appel réseau : je ne voulais pas affirmer une correspondance
+que je n'avais pas réellement observée.
 
-**Un blocage silencieux sur la documentation elle-même** : `docs/` était
-resté dans `.gitignore` depuis la création du dépôt, ce qui fait que toute
-la documentation (MCD, RGPD, user stories...) existait uniquement en
-local, jamais partagée — alors même que CLAUDE.md exige explicitement sa
-présence dans `docs/`. Ce n'est qu'en croisant le dépôt réel avec les
-exigences de certification que le problème est apparu ; correction simple
-une fois identifiée, mais un bon rappel que "ça marche chez moi" ne
-suffit pas pour un livrable partagé.
+Le blocage le plus bête, avec le recul, c'est que `docs/` était resté
+dans `.gitignore` depuis la création du dépôt. Toute la documentation —
+MCD, RGPD, user stories — existait donc uniquement en local, jamais
+partagée, alors que CLAUDE.md exige explicitement sa présence dans
+`docs/`. Personne ne l'avait remarqué parce que "ça marchait" en local :
+c'est en croisant le dépôt réel avec les exigences de certification que
+le problème m'a sauté aux yeux. Correction triviale une fois vue, mais
+un bon rappel que ce qui tourne sur ma machine ne veut rien dire tant que
+ce n'est pas partagé.
 
-**Étendre le schéma sans casser l'existant.** Ajouter `IngestionSource.OPENDATA`
-à l'énumération existante (`MANUAL`/`OCR`/`API`) semblait trivial, mais
-SQLite grave la contrainte `CHECK` d'une colonne `Enum` au moment de la
-création de la table — une base déjà initialisée avec l'ancienne
-énumération refuse silencieusement d'accepter la nouvelle valeur tant
-qu'elle n'est pas recréée. Point à surveiller à chaque évolution de ce
-type d'énumération.
+Étendre le schéma m'a aussi pris au dépourvu à un endroit où je ne
+l'attendais pas : ajouter `IngestionSource.OPENDATA` à l'énumération
+existante (`MANUAL`/`OCR`/`API`) avait l'air trivial. Sauf que SQLite
+grave la contrainte `CHECK` d'une colonne `Enum` au moment de la création
+de la table — une base déjà initialisée avec l'ancienne énumération
+refuse silencieusement la nouvelle valeur tant qu'elle n'est pas
+recréée. Rien de grave une fois compris, mais un piège à surveiller à
+chaque nouvelle évolution de ce genre d'énumération.
