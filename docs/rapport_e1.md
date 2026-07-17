@@ -30,20 +30,32 @@ conforme (Merise) → mise à disposition via une API documentée.
 
 ## 2. Démarche
 
-### 2.1 Trois sources de collecte
+### 2.1 Cinq sources de collecte
 
-| Source | Mécanisme | Fichier |
-|---|---|---|
-| Saisie API directe | `POST /ingest/manual` — JSON des 9 mesures | `routes.py` |
-| Fiche laboratoire (OCR) | `POST /ingest/ocr(-and-predict)` — image/PDF → extraction structurée | `ocr_service.py` (détail : [[doc_technique_e2]]) |
-| API ouverte Hub'Eau | `scripts/ingest_hubeau.py` — import automatisé, hors requête HTTP | contrôle sanitaire officiel de l'eau potable |
+Le référentiel (REAC) exige précisément 5 types de source distincts
+(API web, scraping, fichier, base de données, système big data) — pas
+juste "plusieurs sources hétérogènes" au sens large. La fiche labo (OCR)
+et Hub'Eau couvraient déjà API web et fichier ; j'ai ajouté les 3
+manquantes :
 
-La troisième source a été ajoutée cette phase du projet pour couvrir
-l'exigence de collecte **multi-sources** (web/API ouverte, pas seulement
-saisie manuelle ou OCR). J'ai choisi une API publique plutôt que du
-scraping HTML : moins fragile face aux changements de mise en page du
-site source, pas de zone grise juridique, et surtout un vrai jeu de
-données officiel plutôt qu'une extraction bricolée.
+| Source | Type REAC | Mécanisme | Fichier |
+|---|---|---|---|
+| Fiche laboratoire (OCR) | Fichier | `POST /ingest/ocr(-and-predict)` — image/PDF → extraction structurée | `ocr_service.py` (détail : [[doc_technique_e2]]) |
+| API ouverte Hub'Eau | API web | `scripts/ingest_hubeau.py` — import automatisé, hors requête HTTP | contrôle sanitaire officiel de l'eau potable |
+| Comparaison Wikipédia des normes | Scraping | `scripts/ingest_scraping.py` — table HTML réelle, valeurs limites par organisme (OMS, UE, Inde...) | `en.wikipedia.org/wiki/Drinking_water_quality_standards` |
+| Ancien système départemental | Base de données | `scripts/ingest_legacy_db.py` — SQLite, schéma et format de date propres à ce système | `legacy_system.db` (généré par `scripts/seed_legacy_db.py`) |
+| Jeu Kaggle via DuckDB/Parquet | Big data | `scripts/ingest_bigdata_duckdb.py` — CSV converti en Parquet, requêté via DuckDB | `water_potability.csv` (déjà utilisé pour l'entraînement) |
+
+Sur la saisie API directe (`POST /ingest/manual`) : elle reste dans
+l'application (c'est le canal principal utilisé par un client réel), mais
+je ne la compte plus parmi les 5 sources d'*extraction* du REAC — recevoir
+un dépôt poussé par un client n'est pas la même chose qu'aller chercher
+la donnée à sa source, même si le code et le schéma cible sont partagés.
+
+Pour le scraping, j'avais d'abord écarté cette piste (préférant une API
+publique, moins fragile face aux changements de mise en page) — mais le
+REAC demande explicitement les 5 types, scraping inclus, donc je l'ai
+ajouté malgré cette réserve initiale plutôt que de la contourner.
 
 ### 2.2 Nettoyage et homogénéisation
 
@@ -57,6 +69,19 @@ Chaque source alimente le **même schéma cible** (`Prelevement` + `Mesure`,
   puis pivotés vers les 9 features attendues. Sur les 9, seules 7 ont un
   équivalent identifié dans le contrôle sanitaire français
   (`scripts/ingest_hubeau.py::PARAM_MAP`) — voir §5.
+- Scraping : les valeurs limites réglementaires ne sont pas des mesures de
+  terrain — nature différente, assumée dans le champ `lieu` ("Valeurs
+  limites — [organisme]") plutôt que masquée. Les classifications floues
+  ("0–75 mg/L = soft") sont explicitement ignorées plutôt que converties
+  en un nombre inventé (`scripts/ingest_scraping.py::_extract_number`).
+- Base légataire : noms de colonnes et format de date (`DD/MM/YYYY`)
+  propres à cet ancien système, harmonisés vers le schéma cible et l'ISO
+  8601 (`scripts/ingest_legacy_db.py`) — la seule des 5 sources qui
+  couvre les 9 features sans exception.
+- Big data : les colonnes du CSV Kaggle correspondent déjà aux 9 features
+  attendues — l'harmonisation porte ici sur le *format* (CSV → Parquet →
+  requêtage DuckDB) plutôt que sur les noms de colonnes, contrairement aux
+  deux sources précédentes.
 - Dans tous les cas, un prélèvement est stocké **même si des mesures
   manquent** (`prediction_possible=false` plutôt qu'un rejet) : je
   privilégie la conservation de la donnée partielle à sa perte.
@@ -100,10 +125,12 @@ un contrôle d'accès par clé API pour les clients et par token Bearer
   réels récupérés sur un vrai appel à l'API Hub'Eau (commune de Paris),
   avec détection correcte des features manquantes par prélèvement.
 - Documentation OpenAPI complète et accessible sur `/apidocs`.
-- Suite de tests : 198 tests passants, dont une suite dédiée à
-  l'ingestion Hub'Eau (`tests/test_ingest_hubeau.py`) couvrant le mapping,
-  la conversion d'unité et l'idempotence (un second import ne duplique
-  rien).
+- Suite de tests : 226 tests passants, dont une suite par source
+  d'extraction (`tests/test_ingest_hubeau.py`, `test_ingest_scraping.py`,
+  `test_ingest_legacy_db.py`, `test_ingest_bigdata_duckdb.py`) couvrant
+  mapping, conversion d'unité/format et idempotence (un second import ne
+  duplique rien) — même patron de test répété sur les 4 sources
+  automatisées.
 
 ## 5. Difficultés rencontrées
 
@@ -121,6 +148,17 @@ prédictions automatiques sur cette source. J'aurais pu me contenter de le
 déduire en lisant la documentation Hub'Eau, mais j'ai préféré vérifier
 par un vrai appel réseau : je ne voulais pas affirmer une correspondance
 que je n'avais pas réellement observée.
+
+Le scraping m'a fait rater une feature d'une façon que je n'avais pas
+vue venir : je cherchais la ligne "pH" dans la table Wikipédia par une
+simple sous-chaîne, sans penser que "ph" apparaît aussi tel quel à
+l'intérieur de "sul**ph**ate" — la valeur de sulfate écrasait
+silencieusement la vraie valeur de pH pour les organismes qui avaient les
+deux. Aucun message d'erreur, juste une donnée fausse. Je ne l'ai vu
+qu'en écrivant un test qui vérifie explicitement les deux valeurs côte à
+côte, pas en relisant le code — corrigé en cherchant "ph" en frontière de
+mot plutôt qu'en sous-chaîne. Fiche complète (branche, test, correction) :
+voir [[doc_technique_e5]] et `docs/incident.md`.
 
 Le blocage le plus bête, avec le recul, c'est que `docs/` était resté
 dans `.gitignore` depuis la création du dépôt. Toute la documentation —
