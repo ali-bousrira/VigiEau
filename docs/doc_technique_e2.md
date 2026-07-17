@@ -30,10 +30,14 @@ d'automatiser cette extraction sans dépendre d'un unique fournisseur.
 
 ## C6 — Réaliser une veille technique et réglementaire
 
-Veille menée sur les services d'extraction de texte/OCR disponibles,
-en réponse au besoin client ci-dessus (extraction automatique de fiches
-laboratoire). Comparatif formalisé dans `ocr_service.py:4-17` (docstring
-du module) :
+**Sur quoi porte cette veille** : le besoin client est celui énoncé plus
+haut — automatiser l'extraction de fiches de laboratoire (PDF/scan) pour
+ne plus dépendre d'une ressaisie manuelle, sans dépendre d'un unique
+fournisseur en cas de panne ou de changement tarifaire. La veille porte
+donc sur les **services d'extraction de texte/OCR** disponibles pour
+répondre à ce besoin précis, pas sur l'IA en général.
+
+Comparatif formalisé dans `ocr_service.py:4-17` (docstring du module) :
 
 | Solution | Gratuit/mois | PDF natif | Remarques |
 |---|---|---|---|
@@ -48,10 +52,23 @@ comparatifs publics de services OCR, et test manuel direct (envoi de
 fiches d'exemple à chaque service candidat) plutôt qu'une évaluation
 purement théorique.
 
-**Accessibilité** : ce comparatif lui-même, comme tout document de veille
-partagé en interne, suit les règles de bon sens du reste des livrables
-(taille de police, contraste) plutôt qu'un standard formel dédié — pas de
-norme d'accessibilité spécifique aux documents de veille technique.
+**Veille ponctuelle, pas automatisée** : cette comparaison a été menée à
+un instant donné, pas via un flux surveillé en continu (RSS, agrégateurs
+type Hacker News, InoReader...). Pour un service en évolution rapide
+(nouveaux modèles, tarifs qui changent), une veille automatisée serait
+plus robuste — je le note comme limite assumée plutôt que de prétendre
+avoir mis en place un dispositif que je n'ai pas construit : le temps
+disponible est allé en priorité vers la correction de bugs réels et de
+lacunes de sécurité ailleurs dans le projet, pas vers l'outillage de
+veille pour un comparatif qui n'a de toute façon vocation à être refait
+qu'occasionnellement.
+
+**Accessibilité, appliquée concrètement à ce document** : RGAA/WCAG
+critère "ne pas transmettre une information par la couleur seule" — le
+statut de chaque solution (retenue ou non) est porté par le texte
+("retenu" en gras), pas par une pastille colorée ; hiérarchie de titres
+cohérente (H1 unique, puis H2 par compétence) plutôt que du texte gras
+utilisé comme faux titre.
 
 ---
 
