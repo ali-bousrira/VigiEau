@@ -21,6 +21,11 @@ anthropic>=0.28          # Claude Vision (fallback OCR)
 requests>=2.31           # OCR.space HTTP calls
 pymupdf>=1.23            # PDF → images (fitz)
 
+# ── Ingestion multi-sources (C1) ───────────────────────────────────────────
+beautifulsoup4>=4.12     # scripts/ingest_scraping.py
+duckdb>=1.0               # scripts/ingest_bigdata_duckdb.py
+pyarrow>=15.0              # export Parquet pour DuckDB
+
 # ── Documentation API ─────────────────────────────────────────────────────
 flasgger>=0.9.7.1
 
