@@ -29,6 +29,9 @@ pyarrow>=15.0              # export Parquet pour DuckDB
 # ── Documentation API ─────────────────────────────────────────────────────
 flasgger>=0.9.7.1
 
+# ── Monitorage applicatif (C20) ─────────────────────────────────────────────
+prometheus-flask-exporter>=0.23
+
 # ── Tests ─────────────────────────────────────────────────────────────────
 pytest>=8.0
 pytest-cov>=5.0

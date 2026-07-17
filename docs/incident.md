@@ -135,6 +135,82 @@ git commit -m "feat: expose ocr_provider and ocr_fallback in ingest response"
 
 ---
 
+## Scénario réel : collision du registre Prometheus au deuxième démarrage (C21)
+
+**Date réelle :** 2026-07-17
+**Sévérité :** Bloquante (l'application ne peut plus s'initialiser une
+seconde fois dans le même processus)
+**Service impacté :** `create_app()` (`api/app.py`) — donc toute la
+plateforme dès qu'une deuxième instance est créée sans redémarrer le
+processus Python.
+
+Contrairement au scénario OCR.space ci-dessus (simulé), celui-ci est un
+**vrai bug**, rencontré en développant le monitorage Prometheus (C20),
+corrigé sur sa propre branche avec un test de non-régression et fusionné
+— traçable dans l'historique git (`fix/c21-prometheus-registry-collision`).
+
+### 1. Détection
+
+En lançant la suite complète `pytest tests/` après avoir ajouté
+l'instrumentation Prometheus à `api/app.py`, 61 tests de
+`tests/test_non_regression.py` échouent d'un coup :
+
+```
+ValueError: Duplicated timeseries in CollectorRegistry: {'vigieau_app_info'}
+```
+
+Pas une régression silencieuse : la suite complète refuse de tourner.
+
+### 2. Diagnostic
+
+`prometheus_flask_exporter.PrometheusMetrics(app, ...)` enregistre par
+défaut ses métriques dans le registre global `prometheus_client.REGISTRY`
+— un singleton au niveau du module Python, partagé par tout le processus.
+`create_app()` est appelée une fois par fichier de test qui importe
+l'application (`from api.app import create_app`) : au deuxième appel dans
+le même processus pytest, les mêmes noms de métrique (`vigieau_app_info`,
+`flask_http_request_total`...) tentent de se réenregistrer dans le même
+registre déjà occupé, ce que `prometheus_client` refuse explicitement.
+
+Reproduit isolément par `tests/test_app_factory.py::test_create_app_appelable_plusieurs_fois_sans_collision`.
+
+### 3. Correction et vérification
+
+Fix dans `api/app.py` : un `CollectorRegistry()` neuf passé explicitement
+à chaque appel de `create_app()`, plutôt que de dépendre du registre
+global implicite :
+
+```python
+from prometheus_client import CollectorRegistry
+...
+metrics = PrometheusMetrics(app, group_by="endpoint", registry=CollectorRegistry())
+```
+
+Vérification : `tests/test_app_factory.py` (2 tests, reproduisent 2 et 3
+appels successifs à `create_app()`), plus la suite complète repassée au
+vert (`pytest tests/` — 226 passed, contre 61 erreurs avant le fix).
+
+### 4. Déploiement
+
+- Branche dédiée : `fix/c21-prometheus-registry-collision`, créée depuis
+  `feature/c20-monitoring-prometheus-grafana` (donc après le commit qui
+  introduisait le bug).
+- Test de non-régression ajouté et vérifié rouge avant le fix, vert après.
+- Fusionnée dans `feature/c20-monitoring-prometheus-grafana` puis dans
+  `main` avec un vrai commit de merge (`git log --graph --all`).
+- Déployée via la même CI applicative que le reste du projet
+  (`.github/workflows/ci.yml`), pas de pipeline séparé pour ce fix.
+
+### 5. Leçons tirées
+
+| Point | Observation |
+|---|---|
+| Détection | Un test qui échoue en bloc (61 erreurs identiques) est plus facile à diagnostiquer qu'une régression isolée — le message d'erreur pointait directement vers la cause |
+| État global | Une bibliothèque tierce qui s'appuie sur un singleton implicite (le registre Prometheus par défaut) peut casser un pattern pourtant courant côté applicatif (factory function appelée plusieurs fois) |
+| Test | Le bug n'était pas visible en testant `create_app()` une seule fois — seul un test qui reproduit explicitement l'appel multiple l'aurait révélé avant une vraie suite de tests multi-fichiers |
+
+---
+
 ## Scénario secondaire : clé API OCR.space invalide
 
 **Symptôme :** `POST /ingest/ocr` retourne HTTP 400 avec `"ocr_error": "OCR.space: invalid API key"`  
