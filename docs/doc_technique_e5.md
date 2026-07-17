@@ -15,8 +15,11 @@ competences: [C20, C21]
 
 Donner à l'équipe d'exploitation une visibilité sur la santé de la
 plateforme (volume, latence, erreurs) et une traçabilité complète des
-accès aux données (exigence RGPD), sans dépendre d'un outil externe
-(Prometheus/Grafana envisagés mais non intégrés — voir §5).
+accès aux données (exigence RGPD). Deux couches complémentaires : un
+monitorage applicatif interne (journal RGPD + métriques agrégées maison,
+§2) et depuis cette session une stack Prometheus/Grafana avec alertes à
+seuils (§2.3) — la première ne remplace pas la seconde, elle couvre un
+besoin différent (traçabilité par requête, pas juste des agrégats).
 
 ## 2. Architecture du monitorage
 
@@ -70,6 +73,48 @@ flowchart LR
   `exploit`, vérifié en conditions réelles (navigateur headless) : les
   entrées réelles s'affichent avec IP pseudonymisée (ex. `127.0.0.xxx`).
 
+### 2.3 Stack Prometheus/Grafana (monitorage applicatif type "métrique de système")
+
+Ajoutée cette session pour couvrir C20 (collecteur/agrégateur/dashboard/
+alertes à seuils) — distincte du monitorage de MODÈLE MLflow (C11, voir
+[[mlops_pipeline]]) et distincte aussi du monitorage maison ci-dessus
+(§2.1/2.2), qui reste utile pour la traçabilité RGPD par requête que
+Prometheus ne couvre pas.
+
+- **Exposition** : `GET /metrics` (`api/app.py`, via
+  `prometheus_flask_exporter.PrometheusMetrics(app, group_by="endpoint")`)
+  — format texte Prometheus natif, instrumente automatiquement toutes les
+  routes existantes sans toucher `routes.py`. Vérifié en réel : après
+  quelques requêtes contre un serveur local, `flask_http_request_total`
+  et `flask_http_request_duration_seconds_bucket` remontent bien avec les
+  labels `method`/`status`/`endpoint` attendus.
+- **Collecteur** : `prometheus.yml` — scrape `vigieau:8080/metrics` toutes
+  les 15s, charge les règles d'alerte via `rule_files`.
+- **Alertes** (`monitoring/alert_rules.yml`, seuils explicites) :
+  `TauxErreurEleve` (> 5% de réponses 5xx sur 5 min) et
+  `LatenceP95Elevee` (p95 > 2s sur 5 min), toutes deux avec `for: 2m`
+  pour éviter les faux positifs sur un pic isolé. Évaluées nativement par
+  Prometheus (visibles sur son UI `/alerts`), pas besoin d'Alertmanager
+  pour que les seuils soient "configurés et fonctionnels" — la
+  notification (email/Slack) serait une étape suivante, non implémentée.
+- **Dashboard** : `monitoring/grafana/dashboards/dashboard.json`,
+  provisionné automatiquement au démarrage de Grafana (datasource +
+  dashboard provisionnés par fichier, pas de clic-ops) — requêtes/s par
+  code retour, taux d'erreur, latence p50/p95, requêtes par endpoint.
+- **Déploiement** : deux services ajoutés à `docker-compose.yml`
+  (`prometheus`, `grafana`), images officielles, ports 9090/3000.
+
+**Limite honnête sur la vérification** : tous les fichiers de config
+(`docker-compose.yml`, `prometheus.yml`, `monitoring/alert_rules.yml`,
+les YAML/JSON de provisioning Grafana) sont syntaxiquement validés, et
+`/metrics` a été vérifié en conditions réelles contre le serveur Flask
+local — mais **la stack complète (`docker-compose up` avec Prometheus et
+Grafana réellement démarrés) n'a pas pu être vérifiée de bout en bout
+dans cet environnement de développement, Docker n'y étant pas
+disponible.** Comme pour la CI applicative avant sa correction cette
+session, "la config est valide" n'est pas la même chose que "je l'ai vu
+tourner" — à vérifier sur une machine avec Docker avant la soutenance.
+
 ## 3. Fiche incident
 
 `docs/incident.md` documente un scénario simulé (OCR.space indisponible),
@@ -106,10 +151,14 @@ réponse). `tests/test_accessibility.py` couvre l'onglet Audit (présence
 
 ## 5. Limites connues
 
-- Pas d'alerting automatique (seuils de latence/erreur) — consultation
-  manuelle de `/exploitation/metrics` ou de l'onglet Audit uniquement.
-- Prometheus/Grafana non intégrés : `/exploitation/metrics` retourne un
-  JSON agrégé maison, pas un format `/metrics` scrapable nativement.
+- Alertes Prometheus définies et évaluées nativement (§2.3), mais sans
+  canal de notification configuré (email/Slack) — un seuil dépassé
+  apparaît sur l'UI Prometheus, mais personne n'est notifié activement
+  pour l'instant.
+- Stack Prometheus/Grafana non vérifiée de bout en bout via
+  `docker-compose up` dans cet environnement de développement (pas de
+  Docker disponible) — voir §2.3 pour le détail de ce qui a été vérifié
+  et de ce qui reste à confirmer.
 - `request_metrics` n'a pas de purge automatique (mentionnée comme piste
   dans `docs/roadmap.md`, non implémentée) — croissance illimitée de la
   table en usage prolongé.

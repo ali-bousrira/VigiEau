@@ -6,6 +6,7 @@ import os
 import logging
 from flask import Flask
 from flasgger import Swagger
+from prometheus_flask_exporter import PrometheusMetrics
 from api.models.db     import init_db
 from api.routes.routes import bp
 
@@ -43,6 +44,13 @@ def create_app() -> Flask:
     init_db()
 
     app.register_blueprint(bp)
+
+    # Monitorage applicatif (C20) : expose GET /metrics au format texte
+    # Prometheus — requêtes par route/méthode/code retour, latence en
+    # histogramme. Monitoring de MODÈLE distinct (MLflow, C11) — pas le
+    # même périmètre, voir docs/doc_technique_e5.md.
+    metrics = PrometheusMetrics(app, group_by="endpoint")
+    metrics.info("vigieau_app_info", "VigiEau — informations application", version="1.0.0")
 
     swagger_path = os.path.join(_ROOT, "swagger.yaml")
     Swagger(app, config=SWAGGER_CONFIG, template_file=swagger_path)
