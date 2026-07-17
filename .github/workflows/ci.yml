@@ -43,7 +43,7 @@ jobs:
           ANTHROPIC_API_KEY: ""
         run: |
           pytest tests/ \
-            --cov=api \
+            --cov=db --cov=routes --cov=auth --cov=predict_service --cov=ocr_service \
             --cov-report=term-missing \
             --cov-report=xml \
             -v
