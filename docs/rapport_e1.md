@@ -233,15 +233,24 @@ pour les experts. Toutes les routes de listing sont paginées
   `GET /analyste/prelevements` (filtres `client_id`, `source`, `date`,
   `potable` — voir C2), détail par ID.
 - Gestion des comptes clients (rôle expert) : `GET/POST /admin/clients`,
-  `GET/PUT /admin/clients/<id>`, `POST /admin/clients/<id>/apikey`.
+  `GET/PUT/DELETE /admin/clients/<id>`, `POST /admin/clients/<id>/apikey`.
+- Suppression d'un prélèvement : `DELETE /analyste/prelevements/<id>`
+  (rôle `exploit` uniquement, confirmation explicite requise dans le
+  corps de la requête — cohérent avec le pattern déjà utilisé par
+  `DELETE /me/rgpd`).
 - Export RGPD : `GET/DELETE /me/rgpd`.
 
-**Limite honnête** : la ressource `clients` n'a pas de route `DELETE`
-dédiée (l'effacement passe par `DELETE /me/rgpd`, qui anonymise plutôt que
-supprime), et `prelevements` n'a pas de `POST`/`PUT`/`DELETE` génériques
-en dehors des routes d'ingestion dédiées. Le CRUD complet par ressource
-n'est donc pas entièrement au rendez-vous partout — à finir avant le
-dépôt si le temps le permet, plutôt qu'à passer sous silence ici.
+**CRUD par ressource, et un choix assumé plutôt qu'un oubli** :
+`clients` a désormais son cycle complet (liste, détail, création,
+édition, suppression), mais la suppression d'un client est **refusée
+(409)** s'il a au moins un prélèvement associé — dans ce cas,
+`DELETE /me/rgpd` (anonymisation) est la voie appropriée, pas la
+destruction pure et simple d'un historique réel. `prelevements` n'a pas
+de `POST`/`PUT` génériques en dehors des routes d'ingestion dédiées
+(`/ingest/*`, qui jouent ce rôle de création) ; la suppression, elle,
+existe et est délibérément restreinte au rôle `exploit` — plus
+destructrice que la lecture, elle n'a pas le même filet de sécurité que
+l'anonymisation RGPD des clients.
 
 ---
 
