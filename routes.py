@@ -19,6 +19,7 @@ Deux mondes d'authentification, périmètres strictement séparés :
   POST /admin/clients                    Créer un compte client
   GET  /admin/clients/<id>               Détail d'un compte
   PUT  /admin/clients/<id>               Modifier denomination/adresse/actif
+  DELETE /admin/clients/<id>             Supprimer (uniquement si aucun prélèvement)
   POST /admin/clients/<id>/apikey        Générer ou régénérer la clé API
 
 ━━━━ ANALYSTE (token Bearer — rôle analyste ou exploit) ━━━━━
@@ -28,6 +29,7 @@ Deux mondes d'authentification, périmètres strictement séparés :
   GET  /analyste/dashboard               KPIs qualité agrégés
 
 ━━━━ EXPLOITATION (token Bearer — rôle exploit uniquement) ━━
+  DELETE /analyste/prelevements/<id>     Supprimer un prélèvement (confirmation requise)
   GET  /exploitation/metrics             Volumes, temps de réponse, erreurs
   GET  /exploitation/audit               Journal d'accès RGPD paginé
 
@@ -740,6 +742,37 @@ def admin_update_client(client_id: str):
     return jsonify(_client_dict(client, detail=True))
 
 
+@bp.route("/admin/clients/<string:client_id>", methods=["DELETE"])
+@require_expert()
+def admin_delete_client(client_id: str):
+    """
+    Supprime définitivement un compte client — uniquement s'il n'a aucun
+    prélèvement associé (sinon 409 : utilisez DELETE /me/rgpd pour
+    anonymiser un compte avec un historique réel, qui doit être conservé
+    à des fins techniques/d'audit plutôt que détruit).
+    """
+    db     = g.db
+    client = (db.query(Client)
+                .filter((Client.id == client_id) | (Client.id_client == client_id))
+                .first())
+    if not client:
+        return jsonify({"error": "Client introuvable."}), 404
+
+    nb_prevs = db.query(Prelevement).filter(Prelevement.client_id == client.id).count()
+    if nb_prevs:
+        return jsonify({
+            "error": (f"Client possède {nb_prevs} prélèvement(s) — suppression refusée. "
+                      "Utilisez DELETE /me/rgpd (avec la clé du client) pour anonymiser "
+                      "un compte avec un historique réel, ou désactivez-le via PUT.")
+        }), 409
+
+    client_id_repr = client.id_client
+    db.delete(client)
+    db.commit()
+    log_audit("admin_delete_client", resource_id=client_id, detail=f"id_client={client_id_repr}")
+    return "", 204
+
+
 @bp.route("/admin/clients/<string:client_id>/apikey", methods=["POST"])
 @require_expert()
 def admin_generate_apikey(client_id: str):
@@ -837,6 +870,34 @@ def analyste_prelevement_detail(prev_id: str):
         return jsonify({"error": "Prélèvement introuvable."}), 404
     log_audit("analyste_read_prelevement", resource_id=prev_id)
     return jsonify(_prev_dict(p, include_ocr=True))
+
+
+@bp.route("/analyste/prelevements/<string:prev_id>", methods=["DELETE"])
+@require_expert(role="exploit")
+def exploitation_delete_prelevement(prev_id: str):
+    """
+    Supprime définitivement un prélèvement (et ses mesures/prédiction
+    associées, cascade ORM). Réservé au rôle exploit — contrairement à la
+    lecture (ouverte à l'analyste), c'est une opération destructive sans
+    filet de sécurité équivalent à l'anonymisation RGPD des clients (voir
+    admin_delete_client). Nécessite une confirmation explicite dans le
+    corps de la requête, comme DELETE /me/rgpd.
+    """
+    db = g.db
+    p  = db.query(Prelevement).filter(Prelevement.id == prev_id).first()
+    if not p:
+        return jsonify({"error": "Prélèvement introuvable."}), 404
+
+    data = request.get_json(force=True, silent=True) or {}
+    if not data.get("confirmer"):
+        return jsonify({
+            "error": "Suppression irréversible. Renvoyez la requête avec { \"confirmer\": true }."
+        }), 400
+
+    db.delete(p)
+    db.commit()
+    log_audit("exploitation_delete_prelevement", resource_id=prev_id)
+    return "", 204
 
 
 @bp.route("/analyste/clients/<string:client_id>/prelevements", methods=["GET"])

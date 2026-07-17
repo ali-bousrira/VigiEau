@@ -200,6 +200,43 @@ class TestAdminClients:
         r = http.get("/admin/clients/INEXISTANT", headers=BOB_HEADER)
         assert r.status_code == 404
 
+    def test_supprimer_client_vide(self, http):
+        http.post("/admin/clients",
+                  json={"id_client": "COMM-VIDE", "denomination": "Vide",
+                        "adresse": "X"},
+                  headers=BOB_HEADER)
+        r = http.delete("/admin/clients/COMM-VIDE", headers=ALICE_HEADER)
+        assert r.status_code == 204
+        assert http.get("/admin/clients/COMM-VIDE", headers=BOB_HEADER).status_code == 404
+
+    def test_supprimer_client_avec_prelevements_refuse(self, http):
+        http.post("/admin/clients",
+                  json={"id_client": "COMM-AVEC-DATA", "denomination": "Avec données",
+                        "adresse": "X"},
+                  headers=BOB_HEADER)
+        key_resp = http.post("/admin/clients/COMM-AVEC-DATA/apikey", headers=BOB_HEADER)
+        raw_key  = key_resp.get_json()["api_key"]
+        http.post("/ingest/manual",
+                  json={"ph": 7.2, "Hardness": 180, "Solids": 18000,
+                        "Chloramines": 7, "Sulfate": 300, "Conductivity": 400,
+                        "Organic_carbon": 14, "Trihalomethanes": 60, "Turbidity": 3.5},
+                  headers={"X-API-Key": raw_key})
+
+        r = http.delete("/admin/clients/COMM-AVEC-DATA", headers=BOB_HEADER)
+        assert r.status_code == 409
+        assert http.get("/admin/clients/COMM-AVEC-DATA", headers=BOB_HEADER).status_code == 200
+
+    def test_supprimer_client_inexistant(self, http):
+        r = http.delete("/admin/clients/INEXISTANT", headers=BOB_HEADER)
+        assert r.status_code == 404
+
+    def test_supprimer_client_sans_auth(self, http):
+        http.post("/admin/clients",
+                  json={"id_client": "COMM-NOAUTH-DEL", "denomination": "X", "adresse": "X"},
+                  headers=BOB_HEADER)
+        r = http.delete("/admin/clients/COMM-NOAUTH-DEL")
+        assert r.status_code == 401
+
 
 # ════════════════════════════════════════════════════════════════════════════
 # CLIENTS — /me et /ingest/*
@@ -418,6 +455,47 @@ class TestAnalyste:
         items = r.get_json()["items"]
         assert any(it["id"] == prev_id for it in items)
         assert all(it["prediction"]["potable"] == 0 for it in items)
+
+    def test_supprimer_prelevement_exploit_confirme(self, http, client_header):
+        prev_id = http.post("/ingest/manual",
+                            json={"ph": 7.0, "Hardness": 180, "Solids": 18000,
+                                  "Chloramines": 7, "Sulfate": 300, "Conductivity": 400,
+                                  "Organic_carbon": 14, "Trihalomethanes": 60, "Turbidity": 3.5},
+                            headers=client_header).get_json()["prelevement_id"]
+
+        r = http.delete(f"/analyste/prelevements/{prev_id}",
+                        json={"confirmer": True}, headers=BOB_HEADER)
+        assert r.status_code == 204
+        assert http.get(f"/analyste/prelevements/{prev_id}",
+                        headers=BOB_HEADER).status_code == 404
+
+    def test_supprimer_prelevement_sans_confirmation_refuse(self, http, client_header):
+        prev_id = http.post("/ingest/manual",
+                            json={"ph": 7.0, "Hardness": 180, "Solids": 18000,
+                                  "Chloramines": 7, "Sulfate": 300, "Conductivity": 400,
+                                  "Organic_carbon": 14, "Trihalomethanes": 60, "Turbidity": 3.5},
+                            headers=client_header).get_json()["prelevement_id"]
+
+        r = http.delete(f"/analyste/prelevements/{prev_id}", headers=BOB_HEADER)
+        assert r.status_code == 400
+        assert http.get(f"/analyste/prelevements/{prev_id}",
+                        headers=BOB_HEADER).status_code == 200
+
+    def test_supprimer_prelevement_analyste_interdit(self, http, client_header):
+        prev_id = http.post("/ingest/manual",
+                            json={"ph": 7.0, "Hardness": 180, "Solids": 18000,
+                                  "Chloramines": 7, "Sulfate": 300, "Conductivity": 400,
+                                  "Organic_carbon": 14, "Trihalomethanes": 60, "Turbidity": 3.5},
+                            headers=client_header).get_json()["prelevement_id"]
+
+        r = http.delete(f"/analyste/prelevements/{prev_id}",
+                        json={"confirmer": True}, headers=ALICE_HEADER)
+        assert r.status_code == 403
+
+    def test_supprimer_prelevement_inexistant(self, http):
+        r = http.delete("/analyste/prelevements/00000000-0000-0000-0000-000000000000",
+                        json={"confirmer": True}, headers=BOB_HEADER)
+        assert r.status_code == 404
 
 
 # ════════════════════════════════════════════════════════════════════════════

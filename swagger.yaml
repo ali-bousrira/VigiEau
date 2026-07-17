@@ -346,6 +346,27 @@ paths:
           description: Client mis à jour
         404:
           $ref: "#/responses/NotFound"
+    delete:
+      tags: [Admin]
+      summary: Supprimer définitivement un client
+      description: |
+        Refusé (409) si le client a au moins un prélèvement associé —
+        utilisez DELETE /me/rgpd (avec la clé du client) pour anonymiser
+        un compte avec un historique réel plutôt que le détruire.
+      security:
+        - BearerToken: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+      responses:
+        204:
+          description: Client supprimé
+        404:
+          $ref: "#/responses/NotFound"
+        409:
+          description: Le client a des prélèvements associés — suppression refusée
 
   /admin/clients/{id}/apikey:
     post:
@@ -439,6 +460,35 @@ paths:
       responses:
         200:
           description: Prélèvement complet
+        404:
+          $ref: "#/responses/NotFound"
+    delete:
+      tags: [Exploitation]
+      summary: Supprimer un prélèvement (rôle exploit uniquement)
+      description: |
+        Suppression définitive (cascade sur mesures/prédiction associées).
+        Réservé au rôle exploit. Nécessite `{"confirmer": true}` dans le
+        corps de la requête, comme DELETE /me/rgpd.
+      security:
+        - BearerToken: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          format: uuid
+        - in: body
+          name: body
+          schema:
+            type: object
+            properties:
+              confirmer:
+                type: boolean
+      responses:
+        204:
+          description: Prélèvement supprimé
+        400:
+          description: Confirmation manquante
         404:
           $ref: "#/responses/NotFound"
 
