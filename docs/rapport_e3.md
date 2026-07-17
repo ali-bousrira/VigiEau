@@ -94,36 +94,39 @@ ou déclenchement manuel) : validation des données (réutilise
 
 ## 5. Difficultés rencontrées
 
-**Le pipeline ne tournait pas tel quel.** `imbalanced-learn` (SMOTE) est
-utilisé par le notebook d'entraînement d'origine mais n'a jamais été
-ajouté à `requirements.txt` — je ne l'ai découvert qu'en essayant
-d'exécuter le pipeline pour de vrai, pas en le lisant. Sans cette
-dépendance, aucune automatisation n'était possible.
+Rien de tout ça ne s'est vu en lisant le code — seulement en essayant de
+faire tourner le pipeline pour de vrai. La première surprise :
+`imbalanced-learn` (SMOTE), utilisé par le notebook d'entraînement
+d'origine, n'avait jamais été ajouté à `requirements.txt`. Sans cette
+dépendance, aucune automatisation n'était possible — j'ai dû le
+découvrir à l'exécution, pas à la lecture.
 
-**MLflow a rejeté silencieusement mes métriques la première fois.** Les
-noms de métriques que j'affiche en console (`"Rappel (Recall)"`,
-`"Avg Precision (PR-AUC)"`) contiennent des accents et des parenthèses ;
-l'API `mlflow.log_metrics()` les refuse (seuls alphanumériques, `_`, `-`,
-`.`, espace et `/` sont acceptés) et lève une exception à
-l'enregistrement. Je ne l'ai vu qu'en lançant un entraînement réel de
-bout en bout, pas avec les tests unitaires (qui mockent MLflow) — j'ai dû
-ajouter une table de correspondance vers des noms techniques sûrs
-(`MLFLOW_METRIC_NAMES`).
+Une fois le pipeline lancé, MLflow a rejeté mes métriques en silence. Les
+noms que j'affichais en console (`"Rappel (Recall)"`, `"Avg Precision
+(PR-AUC)"`) contiennent des accents et des parenthèses, et
+`mlflow.log_metrics()` n'accepte que l'alphanumérique, `_`, `-`, `.`,
+l'espace et `/` — une exception à l'enregistrement, invisible dans les
+tests unitaires puisqu'ils mockent MLflow. Il a fallu un entraînement
+réel de bout en bout pour la voir, et une table de correspondance vers
+des noms techniques sûrs (`MLFLOW_METRIC_NAMES`) pour la corriger.
 
-**Choisir le bon seuil de gate a demandé une vraie mesure, pas une
-estimation.** Mon premier seuil (ROC-AUC ≥ 0.85) est passé de justesse
-lors d'un run réel (0.8744 obtenu, une marge de 0.024 à peine) — largement
-dans la zone où une variance normale d'entraînement (ordre d'exécution
+Choisir le seuil du gate qualité a été le moment où j'ai le plus douté.
+Mon premier réflexe (ROC-AUC ≥ 0.85) est passé de justesse sur un run
+réel — 0.8744 obtenu, une marge de 0.024 à peine, largement dans la zone
+où une variance d'entraînement parfaitement normale (ordre d'exécution
 des histogrammes XGBoost en parallèle, versions de bibliothèques) aurait
 pu faire échouer un run parfaitement sain. Je l'ai baissé à 0.82 après
-avoir observé un vrai résultat plutôt que de deviner une marge de
-sécurité a priori.
+avoir vu un vrai résultat, pas en devinant une marge de sécurité a
+priori — deviner aurait été plus rapide, mais je n'aurais eu aucune
+garantie que le chiffre choisi corresponde à quoi que ce soit de réel.
 
-**Le même piège de mock qu'ailleurs dans le projet.** Les fixtures de
-tests qui patchaient `mlflow.xgboost.load_model`/`joblib.load` **pendant
-l'import** du module ont cessé de fonctionner dès que le chargement du
-modèle est devenu paresseux (le patch n'est plus actif au moment où le
-chargement a réellement lieu) — j'ai dû adapter les tests pour injecter
-directement `predict_service._model`/`_scaler` après import plutôt que de
-dépendre du moment du chargement. Un rappel que changer une stratégie de
-chargement a des effets de bord sur la façon dont on peut la tester.
+Et pour finir, le même piège de mock que j'avais déjà croisé ailleurs
+dans le projet : les fixtures qui patchaient
+`mlflow.xgboost.load_model`/`joblib.load` **pendant l'import** du module
+ont cessé de fonctionner dès que le chargement du modèle est devenu
+paresseux. Le patch n'était plus actif au moment où le chargement avait
+réellement lieu. J'ai dû injecter directement
+`predict_service._model`/`_scaler` après import plutôt que de dépendre
+du moment du chargement — un rappel que changer une stratégie de
+chargement a des effets de bord sur la façon dont on peut la tester, même
+quand le changement lui-même semble anodin.
