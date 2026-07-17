@@ -93,25 +93,37 @@ développement, donc non exécuté ici).
 
 ## 5. Difficultés rencontrées
 
-**Corriger un piège clavier peut en révéler un autre.** En ajoutant
-l'onglet "Audit" réservé au rôle `exploit`, j'ai découvert que la fonction
-qui recalcule le style des boutons d'onglet à chaque clic
-(`showTab()`) écrasait la classe `hidden` que je venais de poser sur ce
-nouvel onglet — un analyste aurait vu apparaître l'onglet Audit dès son
-premier changement d'onglet, malgré la restriction de rôle censée le
-cacher. Un correctif d'accessibilité et une nouvelle fonctionnalité
-peuvent interagir de façons non évidentes ; je ne l'ai vu qu'en testant
-le scénario "connexion analyste" après coup, pas en relisant le code.
+Un correctif d'accessibilité en a révélé un autre, sans lien apparent au
+départ. En ajoutant l'onglet "Audit" réservé au rôle `exploit`, j'ai
+découvert que `showTab()` — la fonction qui recalcule le style des
+boutons d'onglet à chaque clic — écrasait la classe `hidden` que je
+venais de poser dessus. Un analyste aurait vu apparaître l'onglet Audit
+dès son premier changement d'onglet, malgré la restriction de rôle censée
+le cacher. Je ne l'ai vu qu'en testant le scénario "connexion analyste"
+après coup, pas en relisant le code — une fonctionnalité toute neuve et
+un correctif déjà en place peuvent interagir de façons qu'aucun des deux
+ne laissait deviner isolément.
 
-**Je n'ai jamais vu la CI applicative tourner pour de vrai.** Le
-`ci.yml` et le `model-ci.yml` sont validés syntaxiquement et j'ai relu
-leur logique avec soin, mais aucun des deux n'a encore été exécuté sur un
-vrai runner GitHub Actions au moment de la rédaction de ce rapport (rien
-n'a encore été poussé). C'est une limite honnête à assumer : "je pense que
-ça marche" n'est pas la même chose que "je l'ai vu tourner".
+Sur la CI, je me suis longtemps contenté d'un aveu prudent : "je ne l'ai
+jamais vue tourner pour de vrai." Ce n'est plus tout à fait exact — et
+en creusant pourquoi, j'ai trouvé pire que "pas encore vérifié". `ci.yml`
+contenait une erreur de syntaxe YAML toute bête (`DATABASE_URL:
+sqlite:///:memory:`, ligne 35 — le `:` final juste avant le saut de
+ligne rend la valeur ambiguë tant qu'elle n'est pas entre guillemets).
+Résultat : les 3 exécutions réelles sur GitHub Actions avaient toutes
+échoué au moment même du parsing, avant qu'un seul job ne démarre. Le
+lint que la CI est censée exécuter (`ruff check . --select E,F,W`)
+n'avait donc jamais tourné non plus : une fois la syntaxe corrigée, il a
+remonté 16 erreurs réelles dans le code applicatif (imports inutilisés,
+comparaisons `== True`, une variable ambiguë) — mineures, mais bien
+réelles, et qui seraient passées inaperçues tant que rien ne les
+vérifiait vraiment. "Je pense que ça marche" n'était même pas le bon
+niveau de doute : ça ne marchait pas du tout, et je ne le savais pas
+parce que je n'avais jamais regardé la page Actions du dépôt.
 
-**La bascule SQLite → PostgreSQL reste à finir, pas juste à documenter.**
-`DATABASE_URL` accepte déjà une URL PostgreSQL côté code, mais
-`docker-compose.yml` ne déclare aucun service PostgreSQL — j'ai choisi de
-documenter clairement cette limite (README) plutôt que d'ajouter un
-service non testé juste pour cocher une case.
+La bascule SQLite → PostgreSQL, elle, reste un chantier ouvert plutôt
+qu'un problème résolu. `DATABASE_URL` accepte déjà une URL PostgreSQL
+côté code, mais `docker-compose.yml` ne déclare aucun service PostgreSQL
+— j'ai choisi de documenter clairement cette limite plutôt que d'ajouter
+un service que je n'aurais pas eu le temps de tester correctement, juste
+pour cocher une case.
