@@ -5,128 +5,167 @@ bloc: 2
 competences: [C9, C10, C11, C12, C13]
 ---
 
-> Brouillon généré à partir du code réel du dépôt. Structure imposée
-> (contexte, démarche, choix techniques, résultats, difficultés
-> rencontrées) — **la voix reste à retravailler** avant dépôt, en
-> particulier §5, pour sonner comme ton vécu et pas comme un résumé de
+> Brouillon généré à partir du code réel du dépôt. Structure organisée
+> **par compétence** (C9 à C13), conforme à la consigne du REAC. **La
+> voix reste à retravailler** avant dépôt, en particulier les encarts
+> "Difficulté", pour sonner comme ton vécu et pas comme un résumé de
 > commits.
 
 # Rapport professionnel — E3 : Modèle en production
 
-## 1. Contexte
+## Contexte
 
 Le modèle de classification de la potabilité (XGBoost, entraîné sur le
 jeu de données Waterflow d'origine) doit être exposé de façon fiable dans
 l'application, tracé (quelle version a produit quelle prédiction), et
-ré-entraînable/validable sans intervention manuelle. Avant cette phase, le
-pipeline d'entraînement n'existait que sous forme de notebooks manuels
-(`water_xgboost.ipynb`, `water_mlflow_server.ipynb`) — aucune chaîne
-automatisée ne le reproduisait. L'enjeu du Bloc 2 (volet modèle) est de
-passer de "ça marche dans mon notebook" à un service de prédiction
-production-ready et une chaîne MLOps qui valide avant de publier.
+ré-entraînable/validable sans intervention manuelle — le versant
+dev/ML du projet chef-d'œuvre, dont le versant gestion de projet est
+couvert par [[rapport_e4]] (même code, même dépôt, deux angles de
+compétences distincts).
 
-## 2. Démarche
+---
 
-### 2.1 Service de prédiction
+## C9 — Développer une API exposant un modèle d'IA
 
-`predict_service.py` expose `run_prediction(mesures)` : chargement
-**paresseux** du modèle (au premier appel, pas à l'import du module) —
-MLflow Model Registry en priorité (`MLFLOW_URI=models:/WaterQualityXGBoost/1`),
-repli automatique sur un fichier XGBoost local
-(`model_artifacts/xgboost_model.json`) si le registre est indisponible.
-Pipeline : validation des 9 features (aucune ne doit être `None`) →
-`RobustScaler` → `XGBoost` → `{potable, label, probability, model_version}`.
-Le `model_version` est renvoyé dans chaque réponse API, ce qui trace
-précisément quelle version du modèle a produit quelle prédiction stockée.
+Cette compétence évalue la partie API (auth, tests, documentation), pas
+le modèle lui-même — voir C11 pour le monitorage du modèle.
 
-### 2.2 Chaîne d'entraînement automatisée
+- **Endpoint** : `POST /predict` (`routes.py`) — accepte des mesures
+  brutes ou un `prelevement_id` existant, retourne la prédiction sans
+  rien persister (endpoint de test/consultation, distinct du pipeline
+  d'ingestion qui, lui, persiste).
+- **Authentification** : `@require_client_key` ou `@require_expert()`
+  selon le contexte d'appel — mêmes décorateurs que le reste de l'API,
+  pas de mécanisme d'auth séparé pour cette route.
+- **Tests** : `tests/test_unitaires.py` (validation des features, scaling,
+  prédiction) et `tests/test_api.py` (auth, codes retour) — modèle et
+  scaler mockés pour ne dépendre d'aucun artefact réel en CI.
+- **OWASP** : le service applique les mêmes protections que le reste de
+  l'API — aucune injection SQL possible (requêtes 100% paramétrées via
+  l'ORM), et une revue de sécurité menée cette session sur l'ensemble du
+  dépôt a corrigé une XSS stockée dans le rendu du journal d'audit
+  (`templates/index.html`) qui aurait pu affecter un expert consultant
+  des données issues, indirectement, d'un appel à ce type d'endpoint —
+  détail dans [[doc_technique_e5]].
 
-`scripts/train_model.py` reproduit fidèlement le pipeline des notebooks,
-sous forme de fonctions pures et testables : nettoyage (dédoublonnage,
-imputation médiane groupée par classe, winsorisation 1 %/99 %) → split
-80/20 stratifié → `RobustScaler` → `SMOTE` → `XGBClassifier`
-(hyperparamètres fixes) → cross-validation 5-fold → **gate qualité** →
-sauvegarde des artefacts → enregistrement MLflow. Le gate est la pièce
-centrale : le modèle n'est sauvegardé et enregistré **que si** il dépasse
-un seuil de ROC-AUC et de F1 sur la validation — sinon le script sort en
-échec et rien n'est publié. Détail complet du schéma : [[mlops_pipeline]].
+---
 
-### 2.3 CI/CD dédiée
+## C10 — Intégrer l'API d'un modèle ou d'un service d'IA tiers
 
-`.github/workflows/model-ci.yml`, séparée de la CI applicative
-(déclencheur différent : push sur `water_potability.csv`/`scripts/train_model.py`
-ou déclenchement manuel) : validation des données (réutilise
-`tests/test_unitaires.py::TestDataset`, pas de duplication) → entraînement
-→ gate → publication des artefacts comme artefact GitHub Actions.
+Ici on intègre une API tierce, pas celle qu'on développe soi-même (C9) —
+c'est le service OCR (OCR.space + Claude Vision en repli), détaillé côté
+veille/paramétrage dans [[doc_technique_e2]] (C6-C8). Cette section se
+concentre sur ce que C10 demande spécifiquement : tests sur le service
+intégré, et gestion du renouvellement d'authentification.
 
-## 3. Choix techniques
+- **Tests spécifiques à l'intégration** : `tests/test_e2e.py` (10 tests,
+  pipeline complet via le service tiers mocké) et 2 tests d'erreur dans
+  `tests/test_api.py` — aucun appel réseau réel en CI, cohérent avec le
+  reste du projet.
 
-- **Chargement paresseux plutôt qu'au démarrage** : évite qu'un import du
-  module échoue si MLflow n'est pas encore disponible au moment du
-  déploiement, et permet le repli sur fichier local sans changement de
-  code.
-- **Seuil de qualité absolu, pas de comparaison au modèle précédent** :
-  `mlflow_water.db` étant gitignoré, chaque run CI repart d'un registre
-  MLflow vide — comparer à un "champion" précédent n'aurait pas de sens
-  dans cet état. Assumé et documenté plutôt que contourné artificiellement.
-- **Hyperparamètres et graine aléatoire fixes**, identiques à
-  `model_artifacts/metadata.json` : reproductibilité et comparabilité
-  avec le modèle actuellement déployé, pas une réoptimisation.
-- **CI modèle séparée de la CI applicative** : les deux n'ont ni le même
-  déclencheur ni la même finalité ; les mélanger aurait rendu les deux
-  moins lisibles.
+**Limite honnête sur le renouvellement d'authentification** : les clés
+`OCR_SPACE_API_KEY`/`ANTHROPIC_API_KEY` sont des clés statiques en
+variable d'environnement, sans mécanisme de rotation automatisée dans le
+code — un renouvellement se ferait aujourd'hui manuellement (régénérer la
+clé chez le fournisseur, mettre à jour le secret de déploiement,
+redémarrer). C'est une limite assumée plutôt qu'un mécanisme à inventer
+pour ce rapport : la configuration par variable d'environnement rend au
+moins la rotation opérationnellement simple, même sans automatisation
+applicative.
 
-## 4. Résultats
+---
 
-- Pipeline exécuté en conditions réelles (pas seulement en test) :
-  Accuracy 0.7912, F1 0.7329, ROC-AUC 0.8744 — cohérent avec la référence
-  historique du modèle actuellement déployé (ROC-AUC ≈ 0.8765).
-- Gate configuré à ROC-AUC ≥ 0.82 et F1 ≥ 0.65 (marge sous la référence
-  pour absorber la variance normale d'un ré-entraînement sans masquer une
-  vraie régression — voir §5).
-- `POST /predict` autonome : accepte des mesures brutes ou un
-  `prelevement_id` existant, retourne la prédiction sans rien persister
-  (endpoint de test/consultation, distinct du pipeline d'ingestion).
-- Suite de tests : `tests/test_train_model.py` (pipeline d'entraînement
-  sur données synthétiques, hyperparamètres réduits, MLflow mocké) et
-  `tests/test_unitaires.py` (validation, scaling, prédiction) — 198 tests
-  passants au total sur l'ensemble du dépôt.
+## C11 — Monitorer un modèle d'IA (MLOps)
 
-## 5. Difficultés rencontrées
+Monitorage du *modèle*, pas de l'application (ça, c'est C20 — voir
+[[doc_technique_e5]], attention à ne pas confondre les deux comme le
+REAC le signale lui-même).
 
-Rien de tout ça ne s'est vu en lisant le code — seulement en essayant de
-faire tourner le pipeline pour de vrai. La première surprise :
-`imbalanced-learn` (SMOTE), utilisé par le notebook d'entraînement
-d'origine, n'avait jamais été ajouté à `requirements.txt`. Sans cette
-dépendance, aucune automatisation n'était possible — j'ai dû le
-découvrir à l'exécution, pas à la lecture.
+- **Registre MLflow** : `predict_service.py` charge le modèle en priorité
+  depuis le Model Registry (`MLFLOW_URI=models:/WaterQualityXGBoost/1`),
+  avec repli automatique sur un fichier XGBoost local
+  (`model_artifacts/xgboost_model.json`) si le registre est indisponible
+  — chargement **paresseux** (au premier appel, pas à l'import).
+- **Traçabilité par prédiction** : chaque réponse de `/predict` inclut
+  `model_version`, ce qui trace précisément quelle version du modèle a
+  produit quelle prédiction stockée — sans ce champ, impossible de savoir
+  a posteriori quel modèle est responsable d'un résultat donné.
+- **Limite connue** : pas de dashboard dédié au monitorage de modèle
+  (type Dash/Streamlit) au-delà de l'UI MLflow elle-même — suffisant pour
+  ce projet, documenté comme limite plutôt que comme fonctionnalité.
 
-Une fois le pipeline lancé, MLflow a rejeté mes métriques en silence. Les
-noms que j'affichais en console (`"Rappel (Recall)"`, `"Avg Precision
-(PR-AUC)"`) contiennent des accents et des parenthèses, et
-`mlflow.log_metrics()` n'accepte que l'alphanumérique, `_`, `-`, `.`,
-l'espace et `/` — une exception à l'enregistrement, invisible dans les
-tests unitaires puisqu'ils mockent MLflow. Il a fallu un entraînement
-réel de bout en bout pour la voir, et une table de correspondance vers
-des noms techniques sûrs (`MLFLOW_METRIC_NAMES`) pour la corriger.
+---
 
-Choisir le seuil du gate qualité a été le moment où j'ai le plus douté.
-Mon premier réflexe (ROC-AUC ≥ 0.85) est passé de justesse sur un run
-réel — 0.8744 obtenu, une marge de 0.024 à peine, largement dans la zone
-où une variance d'entraînement parfaitement normale (ordre d'exécution
-des histogrammes XGBoost en parallèle, versions de bibliothèques) aurait
-pu faire échouer un run parfaitement sain. Je l'ai baissé à 0.82 après
-avoir vu un vrai résultat, pas en devinant une marge de sécurité a
-priori — deviner aurait été plus rapide, mais je n'aurais eu aucune
-garantie que le chiffre choisi corresponde à quoi que ce soit de réel.
+## C12 — Programmer les tests automatisés d'un modèle d'IA
 
-Et pour finir, le même piège de mock que j'avais déjà croisé ailleurs
-dans le projet : les fixtures qui patchaient
-`mlflow.xgboost.load_model`/`joblib.load` **pendant l'import** du module
-ont cessé de fonctionner dès que le chargement du modèle est devenu
-paresseux. Le patch n'était plus actif au moment où le chargement avait
-réellement lieu. J'ai dû injecter directement
+- `tests/test_train_model.py` : pipeline d'entraînement sur données
+  synthétiques, hyperparamètres réduits, MLflow mocké.
+- `tests/test_unitaires.py` : validation des features, scaling, prédiction.
+
+**Couverture de tests, mesurée honnêtement** : la commande CI
+(`pytest --cov=api`) rapporte 97 %, mais ce chiffre mesure uniquement les
+fichiers de ré-export `api/` (quelques lignes chacun, voir
+[[architecture]] pour le détail de ce découpage racine/`api/`), pas la
+logique réelle. En pointant la couverture sur les fichiers qui contiennent
+vraiment le code (`db.py`, `routes.py`, `auth.py`, `predict_service.py`,
+`ocr_service.py`), le chiffre réel est **77 %** — `db.py` (97 %) et
+`routes.py` (85 %) sont bien couverts, mais `ocr_service.py` ne l'est qu'à
+**21 %** : les fonctions qui font de vrais appels réseau
+(`_ocr_space`, `_claude_vision_extract`) ne sont volontairement pas
+exercées par la suite (aucun appel réseau réel en CI, voir C10). Ce
+chiffre de 77 % est plus honnête que le 97 % actuellement affiché par la
+CI — corriger le flag `--cov` est une amélioration identifiée pendant la
+rédaction de ce rapport, pas encore appliquée.
+
+---
+
+## C13 — Développer la CI d'un modèle d'IA
+
+`.github/workflows/model-ci.yml`, séparé de la CI applicative
+(déclencheur différent : push sur `water_potability.csv`,
+`scripts/train_model.py` ou `requirements.txt`, ou déclenchement manuel).
+Étapes : validation des données (réutilise
+`tests/test_unitaires.py::TestDataset`, pas de duplication) →
+entraînement → gate qualité → publication des artefacts comme artefact
+GitHub Actions. L'entraînement du modèle ne déclenche pas automatiquement
+un déploiement de celui-ci — un choix assumé, pas un oubli.
+
+**Pipeline exécuté en conditions réelles** (pas seulement en test) :
+Accuracy 0.7912, F1 0.7329, ROC-AUC 0.8744 — cohérent avec la référence
+historique du modèle actuellement déployé (ROC-AUC ≈ 0.8765). Gate
+configuré à ROC-AUC ≥ 0.82 et F1 ≥ 0.65.
+
+**Vu tourner en vert pour de vrai** : `model-ci.yml` s'est déclenché tout
+seul (modification de `requirements.txt`) lors du push qui a aussi
+corrigé la CI applicative cassée — première exécution réelle sur un
+runner GitHub Actions depuis la création du workflow, et elle a réussi du
+premier coup.
+
+**Difficulté — le pipeline ne tournait pas tel quel.** `imbalanced-learn`
+(SMOTE), utilisé par le notebook d'entraînement d'origine, n'avait jamais
+été ajouté à `requirements.txt`. Sans cette dépendance, aucune
+automatisation n'était possible — je l'ai découvert à l'exécution, pas à
+la lecture.
+
+**Difficulté — MLflow a rejeté mes métriques en silence.** Les noms que
+j'affichais en console (`"Rappel (Recall)"`, `"Avg Precision (PR-AUC)"`)
+contiennent des accents et des parenthèses, et `mlflow.log_metrics()`
+n'accepte que l'alphanumérique, `_`, `-`, `.`, l'espace et `/` — une
+exception à l'enregistrement, invisible dans les tests unitaires puisqu'ils
+mockent MLflow. Corrigé avec une table de correspondance vers des noms
+techniques sûrs (`MLFLOW_METRIC_NAMES`).
+
+**Difficulté — choisir le seuil du gate qualité a été le moment où j'ai
+le plus douté.** Mon premier réflexe (ROC-AUC ≥ 0.85) est passé de
+justesse sur un run réel — 0.8744 obtenu, une marge de 0.024 à peine,
+largement dans la zone où une variance d'entraînement parfaitement
+normale aurait pu faire échouer un run parfaitement sain. Je l'ai baissé
+à 0.82 après avoir vu un vrai résultat, pas en devinant une marge de
+sécurité a priori.
+
+**Difficulté — le même piège de mock qu'ailleurs dans le projet.** Les
+fixtures qui patchaient `mlflow.xgboost.load_model`/`joblib.load`
+**pendant l'import** du module ont cessé de fonctionner dès que le
+chargement du modèle est devenu paresseux. J'ai dû injecter directement
 `predict_service._model`/`_scaler` après import plutôt que de dépendre
-du moment du chargement — un rappel que changer une stratégie de
-chargement a des effets de bord sur la façon dont on peut la tester, même
-quand le changement lui-même semble anodin.
+du moment du chargement.
