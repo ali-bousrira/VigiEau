@@ -6,6 +6,7 @@ import os
 import logging
 from flask import Flask
 from flasgger import Swagger
+from prometheus_client import CollectorRegistry
 from prometheus_flask_exporter import PrometheusMetrics
 from api.models.db     import init_db
 from api.routes.routes import bp
@@ -49,7 +50,14 @@ def create_app() -> Flask:
     # Prometheus — requêtes par route/méthode/code retour, latence en
     # histogramme. Monitoring de MODÈLE distinct (MLflow, C11) — pas le
     # même périmètre, voir docs/doc_technique_e5.md.
-    metrics = PrometheusMetrics(app, group_by="endpoint")
+    #
+    # Registre dédié (pas le registre global par défaut) : create_app()
+    # est appelée plusieurs fois dans le même processus (une fois par
+    # fichier de test qui importe l'app) — avec le registre global,
+    # PrometheusMetrics lève "Duplicated timeseries in CollectorRegistry"
+    # dès le deuxième appel (trouvé en lançant la suite complète, pas en
+    # relisant le code — voir tests/test_app_factory.py).
+    metrics = PrometheusMetrics(app, group_by="endpoint", registry=CollectorRegistry())
     metrics.info("vigieau_app_info", "VigiEau — informations application", version="1.0.0")
 
     swagger_path = os.path.join(_ROOT, "swagger.yaml")
