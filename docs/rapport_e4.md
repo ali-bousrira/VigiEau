@@ -87,9 +87,10 @@ développement, donc non exécuté ici).
   déjà fonctionnel côté API mais jusque-là sans vue dédiée.
 - Dropdown client dans le filtre Prélèvements (remplace un champ texte
   libre exigeant l'identifiant exact).
-- CI applicative fonctionnelle en local (lint + 198 tests), non encore
-  vérifiée sur un vrai runner GitHub Actions au moment de la rédaction
-  (voir §5).
+- CI applicative vérifiée en direct sur un vrai runner GitHub Actions
+  (pas seulement en local) : jobs "Tests & Lint" et "Build Docker image"
+  verts, image poussée sur GHCR — au prix de 3 corrections successives,
+  voir §5.
 
 ## 5. Difficultés rencontrées
 
@@ -105,21 +106,39 @@ un correctif déjà en place peuvent interagir de façons qu'aucun des deux
 ne laissait deviner isolément.
 
 Sur la CI, je me suis longtemps contenté d'un aveu prudent : "je ne l'ai
-jamais vue tourner pour de vrai." Ce n'est plus tout à fait exact — et
-en creusant pourquoi, j'ai trouvé pire que "pas encore vérifié". `ci.yml`
-contenait une erreur de syntaxe YAML toute bête (`DATABASE_URL:
-sqlite:///:memory:`, ligne 35 — le `:` final juste avant le saut de
-ligne rend la valeur ambiguë tant qu'elle n'est pas entre guillemets).
-Résultat : les 3 exécutions réelles sur GitHub Actions avaient toutes
-échoué au moment même du parsing, avant qu'un seul job ne démarre. Le
-lint que la CI est censée exécuter (`ruff check . --select E,F,W`)
-n'avait donc jamais tourné non plus : une fois la syntaxe corrigée, il a
-remonté 16 erreurs réelles dans le code applicatif (imports inutilisés,
-comparaisons `== True`, une variable ambiguë) — mineures, mais bien
-réelles, et qui seraient passées inaperçues tant que rien ne les
-vérifiait vraiment. "Je pense que ça marche" n'était même pas le bon
-niveau de doute : ça ne marchait pas du tout, et je ne le savais pas
-parce que je n'avais jamais regardé la page Actions du dépôt.
+jamais vue tourner pour de vrai." En creusant pourquoi, j'ai trouvé pire
+que "pas encore vérifié" : `ci.yml` contenait une erreur de syntaxe YAML
+toute bête (`DATABASE_URL: sqlite:///:memory:`, ligne 35 — le `:` final
+juste avant le saut de ligne rend la valeur ambiguë tant qu'elle n'est
+pas entre guillemets). Les 3 exécutions réelles sur GitHub Actions
+avaient toutes échoué au moment même du parsing, avant qu'un seul job ne
+démarre — le lint (`ruff check . --select E,F,W`) n'avait donc jamais
+tourné non plus. Une fois la syntaxe corrigée, il a remonté 16 erreurs
+réelles dans le code applicatif (imports inutilisés, comparaisons
+`== True`, une variable ambiguë) — mineures, mais bien réelles, et qui
+seraient passées inaperçues tant que rien ne les vérifiait vraiment.
+
+Corriger le YAML n'a fait que révéler la couche suivante. Une fois le
+job "Tests & Lint" vert pour de vrai, le job "Build Docker image" a
+échoué à son tour — deux fois, sur deux causes différentes, chacune
+invisible tant que la précédente bloquait tout : d'abord `Cache export
+is not supported for the docker driver` (le driver Docker par défaut ne
+supporte pas `cache-to`, il manquait un `docker/setup-buildx-action`
+avant le build), puis, une fois le build réussi, un refus de push vers
+GHCR (`denied: installation not allowed to Create organization
+package`) — le workflow ne déclarait aucune permission `packages:
+write` explicite. Trois bugs réels, trouvés un par un parce que chacun
+masquait le suivant, corrigés un par un, chaque correctif repoussé et
+revérifié en direct sur la page Actions avant de passer au suivant.
+Aujourd'hui les jobs "Tests & Lint" et "Build Docker image" sont verts
+pour de vrai — je les ai vus tourner, pas seulement lus. Seul le job de
+déploiement échoue encore, et c'est attendu : il cible un serveur de
+production qui n'existe pas dans cet environnement scolaire (secrets
+`DEPLOY_HOST`/`DEPLOY_USER`/`DEPLOY_SSH_KEY` non configurés), une
+limite déjà assumée plus haut, pas une régression cachée. "Je pense que
+ça marche" n'était même pas le bon niveau de doute au départ : ça ne
+marchait pas du tout, sur trois couches différentes, et je ne le savais
+pas parce que je n'avais jamais regardé la page Actions du dépôt.
 
 La bascule SQLite → PostgreSQL, elle, reste un chantier ouvert plutôt
 qu'un problème résolu. `DATABASE_URL` accepte déjà une URL PostgreSQL
