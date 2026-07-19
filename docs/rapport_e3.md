@@ -5,11 +5,8 @@ bloc: 2
 competences: [C9, C10, C11, C12, C13]
 ---
 
-> Brouillon généré à partir du code réel du dépôt. Structure organisée
-> **par compétence** (C9 à C13), conforme à la consigne du REAC. **La
-> voix reste à retravailler** avant dépôt, en particulier les encarts
-> "Difficulté", pour sonner comme ton vécu et pas comme un résumé de
-> commits.
+> Structure organisée **par compétence** (C9 à C13), conforme à la
+> consigne du REAC.
 
 # Rapport professionnel — E3 : Modèle en production
 

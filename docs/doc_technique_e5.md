@@ -4,12 +4,9 @@ epreuve: E5
 competences: [C20, C21]
 ---
 
-> Brouillon technique généré à partir du code du dépôt (`auth.py`,
-> `routes.py`, `db.py`, `api/app.py`, `docs/incident.md`) — factuel et
-> vérifiable. Structure organisée par compétence (C20, C21), conforme à
-> la consigne du REAC. Voir [[rgpd]] pour le détail des mesures de
-> protection des données et [[architecture]] pour la vue d'ensemble
-> technique.
+> Structure organisée par compétence (C20, C21), conforme à la consigne
+> du REAC. Voir [[rgpd]] pour le détail des mesures de protection des
+> données et [[architecture]] pour la vue d'ensemble technique.
 
 # Documentation technique — Monitorage et incident (E5)
 

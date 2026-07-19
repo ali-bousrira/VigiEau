@@ -4,11 +4,9 @@ epreuve: E2
 competences: [C6, C7, C8]
 ---
 
-> Brouillon technique généré à partir du code du dépôt (`ocr_service.py`,
-> `routes.py`, `tests/`) — factuel et vérifiable. Structure organisée par
-> compétence (C6, C7, C8), conforme à la consigne du REAC. Voir
-> [[architecture]] pour le diagramme de séquence complet du pipeline
-> OCR → prédiction.
+> Structure organisée par compétence (C6, C7, C8), conforme à la consigne
+> du REAC. Voir [[architecture]] pour le diagramme de séquence complet du
+> pipeline OCR → prédiction.
 
 # Documentation technique — Service OCR (E2)
 

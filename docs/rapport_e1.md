@@ -5,13 +5,10 @@ bloc: 1
 competences: [C1, C2, C3, C4, C5]
 ---
 
-> Brouillon généré à partir du code réel du dépôt à l'appui de chaque
-> affirmation. Structure organisée **par compétence** (C1 à C5), conforme
-> à la consigne du REAC ("faites correspondre votre plan à celui du
-> REAC. Découpez par compétence, sans chercher forcément à raconter une
-> histoire") plutôt qu'en contexte/démarche/résultats. **La voix doit
-> rester la tienne** avant dépôt — relis et reformule ce qui ne sonne pas
-> comme ton propre vécu, en particulier les encarts "Difficulté".
+> Structure organisée **par compétence** (C1 à C5), conformément à la
+> consigne du REAC ("faites correspondre votre plan à celui du REAC.
+> Découpez par compétence, sans chercher forcément à raconter une
+> histoire") plutôt qu'en contexte/démarche/résultats.
 
 # Rapport professionnel — E1 : Collecte, stockage et mise à disposition des données
 
@@ -370,12 +367,13 @@ doit pas faire disparaître son historique d'accès).
 **Difficulté — un blocage bête, mais avec un vrai impact.** `docs/` était
 resté dans `.gitignore` depuis la création du dépôt. Toute la
 documentation — MCD, RGPD, user stories — existait donc uniquement en
-local, jamais partagée, alors que CLAUDE.md exige explicitement sa
-présence dans `docs/`. Personne ne l'avait remarqué parce que "ça
-marchait" en local : c'est en croisant le dépôt réel avec les exigences
-de certification que le problème m'a sauté aux yeux. Correction triviale
-une fois vue, mais un bon rappel que ce qui tourne sur ma machine ne veut
-rien dire tant que ce n'est pas partagé.
+local, jamais partagée, alors que la certification exige explicitement
+que ces livrables vivent dans `docs/`, versionnés comme le reste du
+projet. Personne ne l'avait remarqué parce que "ça marchait" en local :
+c'est en croisant le dépôt réel avec les exigences de certification que
+le problème m'a sauté aux yeux. Correction triviale une fois vue, mais un
+bon rappel que ce qui tourne sur ma machine ne veut rien dire tant que ce
+n'est pas partagé.
 
 ---
 

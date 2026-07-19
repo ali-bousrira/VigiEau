@@ -5,12 +5,10 @@ bloc: 3
 competences: [C14, C15, C16, C17, C18, C19]
 ---
 
-> Brouillon généré à partir du code réel du dépôt. Structure organisée
-> **par compétence** (C14 à C19), conforme à la consigne du REAC — E4 est
-> le versant gestion de projet du chef-d'œuvre, [[rapport_e3]] en est le
-> versant dev/ML (même code, même dépôt, deux angles de compétences
-> distincts). **La voix reste à retravailler** avant dépôt, en
-> particulier les encarts "Difficulté".
+> Structure organisée **par compétence** (C14 à C19), conforme à la
+> consigne du REAC — E4 est le versant gestion de projet du chef-d'œuvre,
+> [[rapport_e3]] en est le versant dev/ML (même code, même dépôt, deux
+> angles de compétences distincts).
 
 # Rapport professionnel — E4 : Application
 
@@ -123,7 +121,7 @@ graph TB
 
 Un seul service Flask porte les trois profils et les trois modules
 fonctionnels (Data/Modèle/OCR) — un choix cohérent avec l'exigence du
-projet ("API modulaire unique", voir `CLAUDE.md`) plutôt que trois
+cahier des charges ("API modulaire unique") plutôt que trois
 micro-services séparés à déployer et versionner ensemble pour un projet
 de cette taille. Le pattern racine/`api/` (logique réelle à la racine,
 `api/` comme fine couche de ré-export, absent du diagramme ci-dessus par
