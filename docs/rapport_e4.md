@@ -153,7 +153,7 @@ rapport :
   renvoyer à une commande : `feature/c1-sources-multiples`,
   `feature/c20-monitoring-prometheus-grafana`,
   `fix/c21-prometheus-registry-collision`, fusionnées via les commits
-  `e14465c`, `2934af5`, `f20a9f4` (`git log --merges --oneline`).
+  `1710f8d`, `5588939`, `066956f` (`git log --merges --oneline`).
 
 ---
 
