@@ -51,9 +51,33 @@ flowchart LR
 - **Modèle** (`db.py:245-257`, table `request_metrics`) : `route`,
   `method`, `status_code`, `duration_ms`, `actor_type`, `actor_hint`
   (hint de clé API ou login expert — jamais la clé/le token en clair).
-- **Exposition** : `GET /exploitation/metrics` (`routes.py:927-976`, rôle
+- **Exposition** : `GET /exploitation/metrics` (`routes.py:985-1037`, rôle
   `exploit` uniquement) — agrège les `limit` dernières requêtes par
   route : nombre, taux d'erreur, p50/p95/moyenne de latence.
+
+### Journal applicatif (`logging`)
+
+Exigence plancher explicite du REAC pour C20 ("minimum : `import
+logging`"), présente dans le code mais jusqu'ici jamais nommée dans ce
+rapport — les deux mécanismes maison ci-dessous s'ajoutent au module
+standard Python, pas l'inverse :
+
+- **Configuration centralisée** : `logging.basicConfig(level=logging.INFO,
+  format="%(asctime)s [%(levelname)s] %(name)s — %(message)s")`
+  (`api/app.py:40-43`), appliquée une fois au démarrage de l'application.
+- **Validation de config au démarrage** (`auth.py:59-129`,
+  `_load_expert_tokens`) : `logger.warning` si `EXPERT_TOKENS` est
+  absente, une entrée est malformée, un rôle est inconnu, un token est
+  trop court ou en collision de hash ; `logger.info` par expert chargé
+  avec succès — détecter une auth mal configurée avant qu'elle ne bloque
+  silencieusement un expert, pas juste "logger pour logger".
+- **Erreurs d'extraction** : `logger.exception("Erreur OCR")`
+  (`routes.py:496` et `:533`) sur les deux routes d'ingestion OCR.
+- **Repli de service** : `logger.warning`/`logger.info` dans
+  `predict_service.py:43-74` (bascule MLflow → fichier local, voir
+  [[rapport_e3]] C11) et `ocr_service.py:205-227` (bascule OCR.space →
+  Claude Vision, avec taille de fichier et nombre de caractères extraits
+  en clair dans le log).
 
 ### Journal d'accès RGPD (`audit_logs`)
 
@@ -70,6 +94,12 @@ flowchart LR
   (onglet "Audit", visible uniquement pour le rôle `exploit`) vérifiée en
   conditions réelles (navigateur headless) : les entrées réelles
   s'affichent avec IP pseudonymisée (ex. `127.0.0.xxx`).
+
+**Onglet Audit, capturé en conditions réelles** (serveur local, données
+de test) — filtres acteur/action, et IP effectivement pseudonymisée sur
+chaque ligne, pas seulement dans le code :
+
+![Onglet Audit — journal d'accès réel, IP pseudonymisée (dernier octet masqué)](assets/e5_audit_tab.png)
 
 ### Stack Prometheus/Grafana (ajoutée cette session)
 
@@ -99,14 +129,43 @@ requête que Prometheus ne couvre pas.
 - **Déploiement** : deux services ajoutés à `docker-compose.yml`
   (`prometheus`, `grafana`), images officielles, ports 9090/3000.
 
-**Limite honnête sur la vérification** : tous les fichiers de config sont
-syntaxiquement validés, et `/metrics` a été vérifié en conditions réelles
-contre le serveur Flask local — mais **la stack complète
-(`docker-compose up` avec Prometheus et Grafana réellement démarrés) n'a
-pas pu être vérifiée de bout en bout dans cet environnement de
-développement, Docker n'y étant pas disponible.** "La config est valide"
-n'est pas la même chose que "je l'ai vu tourner" — à vérifier sur une
-machine avec Docker avant la soutenance.
+**Vérifiée de bout en bout via `docker compose up`**, pas seulement en
+config statique — et cette vérification a immédiatement révélé un vrai
+bug jamais rencontré avant faute d'avoir testé la stack complète :
+l'image Docker bascule sur un utilisateur non-root (`vigieau`), mais
+`/data` (point de montage du volume nommé `vigieau_data`, où vit la base
+SQLite en conteneur) n'était jamais chowné pour cet utilisateur —
+`sqlite3.OperationalError: unable to open database file` au démarrage,
+boucle de redémarrage. Corrigé dans `Dockerfile` (`mkdir -p /data &&
+chown -R vigieau /app /data`, avant le `USER vigieau`) ; au passage,
+`docker-compose.yml` ne transmettait pas non plus `EXPERT_TOKENS` au
+conteneur `vigieau` (aucun expert n'aurait pu se connecter) — corrigé de
+la même façon.
+
+Une fois ces deux corrections faites, stack vérifiée réellement en
+marche :
+
+- Prometheus scrape bien `vigieau:8080/metrics`
+  (`GET /api/v1/targets` → `"health":"up"`).
+- Dashboard Grafana provisionné automatiquement, affiche des données
+  réelles générées par du trafic authentifié réel (login `exploit`,
+  plusieurs routes) :
+
+![Dashboard Grafana avec trafic réel — requêtes/s par code retour, taux d'erreur en hausse, latence p50/p95](assets/e5_grafana_dashboard.png)
+
+- **Alerte `TauxErreurEleve` déclenchée pour de vrai**, pas seulement
+  configurée : trafic réel envoyé vers `/ingest/ocr` sans clé OCR
+  configurée (503 systématique, cas déjà documenté plus haut) pendant
+  plus de 2 minutes (`for: 2m`) — l'alerte passe `inactive` → `pending` →
+  **`firing`**, avec la valeur réelle interpolée par Prometheus
+  (`{{ $value | humanizePercentage }}` → **14.04 %**, bien au-dessus du
+  seuil de 5 %) :
+
+![Alerte Prometheus TauxErreurEleve déclenchée (firing), LatenceP95Elevee restée inactive](assets/e5_prometheus_alert_firing.png)
+
+`LatenceP95Elevee` est restée `inactive` durant ce test (aucune requête
+lente générée) — preuve que les deux règles évaluent chacune leur propre
+condition indépendamment, pas un déclenchement groupé artificiel.
 
 **Distinction avec C11** : ceci est du monitorage *applicatif* (volume,
 latence, erreurs HTTP) — le monitorage du *modèle* (MLflow) est une
@@ -143,15 +202,39 @@ après ; fusionnée avec un vrai commit de merge, visible via
 reste du projet, pas de pipeline séparé pour ce fix. Détail complet
 (logs, diagnostic pas à pas) : `docs/incident.md`.
 
-**Point de vigilance sur le scénario simulé** — en vérifiant
-`docs/incident.md` contre le code actuel, 3 détails illustratifs ont
-dérivé de l'implémentation réelle depuis sa rédaction (nom de fonction
-`extract_from_file` vs `extract_from_document`, réponse enrichie jamais
-implémentée, nom d'action d'audit obsolète, commande de test qui ne
-matche plus rien). Le scénario et la méthodologie restent valides ; ces
-détails d'illustration mériteraient une correction séparée de
-`docs/incident.md`, non faite ici pour ne pas modifier un livrable déjà
-considéré terminé sans validation explicite.
+`docs/incident.md:191` fige le chiffre au moment du fix (`226 passed,
+contre 61 erreurs avant le fix`) — 8 tests ont été ajoutés depuis
+(notamment les routes DELETE de C5). Rejoué pour ce rapport :
+`pytest tests/ -q` → **234 passed**, le fix reste vert aujourd'hui, avec
+un chiffre distinct de celui figé dans `incident.md` au moment du fix.
+
+**Cycle suivi pour ce fix**, identique à la méthodologie du scénario
+simulé (détection → diagnostic → correction → leçons tirées), mais
+appliqué ici à un incident réellement rencontré :
+
+```mermaid
+flowchart LR
+    D["Détection\n61 tests en échec d'un coup\naprès l'ajout de C20"] --> I["Diagnostic\nValueError: Duplicated timeseries\nin CollectorRegistry"]
+    I --> B["Branche dédiée\nfix/c21-prometheus-registry-collision"]
+    B --> T["Test de non-régression\ntest_app_factory.py\n(rouge avant fix)"]
+    T --> F["Correctif\nCollectorRegistry() neuf\npar create_app()"]
+    F --> V["Test vert\naprès fix"]
+    V --> M["Merge réel\ngit log --graph --all"]
+    M --> CI["Même CI applicative\n(pas de pipeline séparé)"]
+```
+
+Même structure que le scénario simulé de `docs/incident.md`, mais chaque
+étape ici est vérifiable dans l'historique Git plutôt que décrite en
+prose — la différence entre un exercice de méthodologie et un incident
+réellement résolu.
+
+**Point de vigilance sur le scénario simulé, revérifié** —
+`docs/incident.md` a été relu contre le code actuel pour ce rapport : les
+noms de fonction (`extract_from_document`), l'action d'audit
+(`client_ingest_ocr_predict`) et le nombre de tests cités (10 dans
+`test_e2e.py`) sont exacts. Seule une citation de ligne avait dérivé
+(`routes.py:504-507,559-565` → en réalité `506-509,561-567`, `routes.py`
+ayant grandi) — corrigée directement dans `docs/incident.md`.
 
 ---
 
@@ -170,11 +253,17 @@ C21 ci-dessus.
 - Alertes Prometheus définies et évaluées nativement, mais sans canal de
   notification configuré (email/Slack) — un seuil dépassé apparaît sur
   l'UI Prometheus, mais personne n'est notifié activement pour l'instant.
-- Stack Prometheus/Grafana non vérifiée de bout en bout via
-  `docker-compose up` dans cet environnement de développement (voir C20).
-- `request_metrics` n'a pas de purge automatique (mentionnée comme piste
-  dans `docs/roadmap.md`, non implémentée) — croissance illimitée de la
-  table en usage prolongé.
+- Ni `audit_logs` ni `request_metrics` n'ont de purge automatique.
+  `docs/roadmap.md:31` ne liste en fait que la purge d'`audit_logs` comme
+  piste — pas celle de `request_metrics`, oubliée même de cette
+  roadmap. Preuve plus solide que la roadmap : l'application documente et
+  expose elle-même cette limite à l'utilisateur final, testée en CI —
+  `GET /me/rgpd` (`routes.py:309-313`) répond littéralement
+  `"journaux_acces": "Recommandé : 12 mois glissants. Purge non
+  automatisée à ce jour."` et `"metriques_performance": "Recommandé : 90
+  jours. Agrégation/anonymisation non automatisée à ce jour."`, vérifié
+  par `tests/test_api.py::test_get_rgpd_regles_conservation_completes`
+  (ligne 574). Croissance illimitée des deux tables en usage prolongé.
 - Le monitorage mesure la durée du traitement Flask ; il n'inclut pas la
   latence réseau côté client ni les appels sortants individuels
   (OCR.space, Claude, MLflow) en tant que métriques séparées.

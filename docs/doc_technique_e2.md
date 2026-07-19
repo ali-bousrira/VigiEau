@@ -72,6 +72,17 @@ statut de chaque solution (retenue ou non) est porté par le texte
 cohérente (H1 unique, puis H2 par compétence) plutôt que du texte gras
 utilisé comme faux titre.
 
+**Critères de sélection retenus, point par point** — pour rendre la
+décision auditable plutôt qu'affirmée :
+
+| Critère | Poids dans la décision | OCR.space | Claude Vision (repli) |
+|---|---|---|---|
+| Coût à l'usage MVP | Élevé | Gratuit jusqu'à 25 000 req/mois | Facturé à l'usage, réservé au repli |
+| Support PDF natif | Élevé | Oui | Oui (image) |
+| Simplicité d'intégration | Moyen | REST simple, une clé | SDK Anthropic déjà utilisé ailleurs (OCR structuration) |
+| Dépendance à un seul fournisseur | Élevé (contrainte du besoin) | Écartée par le repli croisé (C8) | — |
+| Précision sur fiches manuscrites/dégradées | Moyen | Correcte | Supérieure (compréhension sémantique) |
+
 ---
 
 ## C7 — Identifier des services d'IA préexistants
@@ -136,10 +147,54 @@ flowchart TD
   (`request_metrics`, voir [[doc_technique_e5]] §C20) — pas un monitorage
   de modèle IA au sens MLflow (ça, c'est C11, voir [[rapport_e3]]).
 
+**Accessibilité de la documentation d'installation** — le REAC demande
+explicitement, au moment de documenter l'installation d'un service,
+d'en profiter pour mentionner l'accessibilité. Constat réel sur
+`README.md` : le tableau des variables d'environnement
+(`README.md:172-187`) est une vraie table Markdown à en-têtes
+(`Variable | Obligatoire | Défaut | Description`), navigable par lecteur
+d'écran via ses en-têtes de colonnes ; les étapes d'installation
+(`README.md:56-101`), elles, ne sont que des commentaires `# 1. ...` à
+l'intérieur d'un unique bloc de code bash — sans structure sémantique de
+liste ordonnée, un lecteur d'écran les annoncera comme du contenu de
+bloc de code, pas comme des étapes numérotées. Limite honnête plutôt que
+corrigée ici (le README n'est pas un livrable de ce rapport).
+
+**Documentation OpenAPI du service**, accessible sur `/apidocs` — les
+deux routes de dépôt (`/ingest/ocr`, `/ingest/ocr-and-predict`)
+apparaissent avec leurs schémas de requête/réponse, au même titre que
+les autres routes de l'API unique (cohérent avec l'architecture C15,
+voir [[rapport_e4]]) :
+
+![Documentation Swagger — schéma d'authentification et routes de l'API unique](assets/e2_swagger_ui.png)
+
 ### Normalisation des données
 
-`_normalise()` (`ocr_service.py:166-189`) — appelée après les deux
-stratégies d'extraction, garantit un contrat de sortie stable :
+`_normalise()` (`ocr_service.py:165-188`) — appelée après les deux
+stratégies d'extraction, garantit un contrat de sortie stable quelle que
+soit la stratégie qui a produit les données :
+
+```python
+def _normalise(data: dict) -> dict[str, Any]:
+    mesures  = data.get("mesures", {})
+    warnings = list(data.get("warnings", []))
+
+    for field in FEATURES:
+        val = mesures.get(field)
+        if val is None:
+            warnings.append(f"Champ absent ou illisible : {field}")
+        else:
+            try:
+                mesures[field] = float(str(val).replace(",", "."))
+            except (ValueError, TypeError):
+                warnings.append(f"Valeur non numérique pour {field} : {val!r}")
+                mesures[field] = None
+
+    data["mesures"], data["warnings"] = mesures, warnings
+    data.setdefault("date_prelevement", None)
+    ...
+    return data
+```
 
 - conversion virgule décimale → point (`"7,2"` → `7.2`) ;
 - toute feature des 9 attendues absente ou non numérique → `None` +
@@ -157,6 +212,13 @@ Deux routes consomment `extract_from_document()` (`routes.py`) :
 |---|---|
 | `POST /ingest/ocr` | Stocke le prélèvement même si des mesures manquent — **aucune prédiction automatique** |
 | `POST /ingest/ocr-and-predict` | Enchaîne extraction → stockage → prédiction si les 9 mesures sont présentes (`prediction_possible: true/false` sinon) |
+
+Le comportement `prediction_possible: false` sur mesures incomplètes
+n'est pas qu'une affirmation de prose : `test_e2e_ocr_mesures_partielles_prediction_impossible`
+(`tests/test_e2e.py:237-253`) mocke `extract_from_document` avec une
+seule mesure sur 9 (`{"ph": 7.0}`), poste sur `/ingest/ocr-and-predict`,
+et vérifie `prediction_possible is False` tout en confirmant que le
+prélèvement est quand même sauvegardé (`prelevement_id` présent).
 
 Codes retour (`routes.py:484-495`) :
 
@@ -180,7 +242,13 @@ sollicités en CI.
 `samples/` (voir `samples/README.md`) : `fiche_labo_anonymisee.txt` (fiche
 complète, texte brut anonymisé) et `exemple_extraction_ocr.json` (résultat
 attendu), avec une commande `curl` de démonstration contre
-`/ingest/ocr-and-predict`.
+`/ingest/ocr-and-predict`. Deux fichiers plus démonstratifs, déjà cités
+dans `README.md` et `RAPPORT_CONFORMITE.md` mais absents de
+`samples/README.md`, illustrent en plus la paire nominal/dégradé :
+`fiche_labo_exemple_1.txt` (fiche complète → `prediction_possible=true`)
+et `fiche_labo_exemple_2_partiel.txt` (pH/Turbidité/Conductivité
+seulement → `prediction_possible=false`, cas couvert par le test cité
+ci-dessus).
 
 ### Limites connues
 
@@ -192,3 +260,11 @@ attendu), avec une commande `curl` de démonstration contre
 - Dépendance à deux services tiers payants au-delà des quotas gratuits —
   aucun fallback local (Tesseract) implémenté malgré sa présence dans le
   comparatif.
+- **Asymétrie de journalisation RGPD** : `log_audit()` n'est appelé que
+  sur le chemin de succès des deux routes OCR (`routes.py:505` et `:560`,
+  toutes deux en 201). Les branches d'erreur (400 fichier absent/type
+  invalide, 503 aucun service OCR disponible, 500 exception inattendue —
+  `routes.py:487-497`) ne journalisent rien dans `audit_logs`,
+  contrairement à `/ingest/manual` qui, lui, journalise explicitement son
+  cas d'erreur 400 (`routes.py:456-458`). Seul `request_metrics` capture
+  ces échecs (via `@timed`), sans sémantique acteur/ressource RGPD.

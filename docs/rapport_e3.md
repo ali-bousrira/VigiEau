@@ -50,6 +50,66 @@ le modèle lui-même — voir C11 pour le monitorage du modèle.
   des données issues, indirectement, d'un appel à ce type d'endpoint —
   détail dans [[doc_technique_e5]].
 
+**Deux modes d'appel** (`routes.py:578-617`) — mesures brutes, ou
+`prelevement_id` d'un prélèvement déjà en base (auquel cas les mesures
+sont relues et re-projetées vers les 9 features du modèle) :
+
+```python
+@bp.route("/predict", methods=["POST"])
+@require_client_key
+@timed
+def predict():
+    data = request.get_json(force=True) or {}
+    if "prelevement_id" in data:
+        prev = g.db.query(Prelevement).filter(Prelevement.id == data["prelevement_id"]).first()
+        if prev.client_id != g.client.id:
+            return jsonify({"error": "Accès refusé."}), 403
+        mesures = prev.mesures.to_feature_dict()
+    else:
+        mesures = data
+    result = run_prediction(mesures)   # ValueError → 400 si features manquantes
+    ...
+```
+
+Ne persiste rien — c'est un endpoint de consultation/test, à distinguer de
+`POST /ingest/manual` et `POST /ingest/ocr-and-predict` qui, eux,
+créent le `Prelevement` et la `Prediction` associée (voir [[rapport_e1]]
+C3).
+
+**Critères REAC couverts, point par point** :
+
+| Critère REAC (C9) | Preuve |
+|---|---|
+| Endpoint qui expose le modèle | `POST /predict`, `routes.py:578-617` |
+| Authentification | `@require_client_key` (clé API client, même mécanisme que le reste de l'API) |
+| Tests automatisés | `tests/test_unitaires.py` (features/scaling/prédiction), `tests/test_api.py` (auth, codes retour) |
+| Documentation | `swagger.yaml` (`/predict`), accessible sur `/apidocs` — voir capture ci-dessous |
+| Sécurité (OWASP) | Requêtes paramétrées (ORM), XSS stockée corrigée cette session (détail [[doc_technique_e5]]) ; contrôle d'accès cross-client (BOLA, voir ci-dessous) |
+
+![Documentation Swagger — la route /predict, sous son propre tag « Prediction », avec ses réponses 200/400/401/403/404/422](assets/e3_swagger_predict.png)
+
+**Corrections apportées en relisant ce rapport contre le code réel** —
+deux écarts trouvés en auditant cette section après une première
+rédaction, corrigés plutôt que simplement documentés :
+
+1. `swagger.yaml` ne documentait en réalité **pas** `/predict` (aucun
+   bloc `/predict:`, vérifié par `grep`) alors que cette section
+   l'affirmait comme preuve du critère "Documentation" — corrigé en
+   ajoutant le bloc complet (tag dédié `Prediction`, schémas de requête à
+   deux modes, les 6 réponses réellement possibles). La capture
+   ci-dessus est prise après correction, pas avant.
+2. `tests/test_api.py::test_predict_id_autre_client_refuse` — censé
+   prouver le contrôle d'accès cross-client (protection OWASP API1:2023,
+   Broken Object Level Authorization, `routes.py:603-604`) — utilisait en
+   réalité une clé API jamais enregistrée : la requête échouait en 401
+   dès l'authentification, sans jamais atteindre le code qu'il prétendait
+   tester. Réécrit pour créer un vrai second client via l'API admin et
+   vérifier le 403 réel.
+
+Les deux étaient des écarts vérifiables entre ce que le rapport affirmait
+et ce que le code faisait — le genre d'incohérence qu'un jury peut
+détecter en ouvrant `/apidocs` ou en relisant un test en direct.
+
 ---
 
 ## C10 — Intégrer l'API d'un modèle ou d'un service d'IA tiers
@@ -92,9 +152,45 @@ REAC le signale lui-même).
   `model_version`, ce qui trace précisément quelle version du modèle a
   produit quelle prédiction stockée — sans ce champ, impossible de savoir
   a posteriori quel modèle est responsable d'un résultat donné.
+
+**Chaîne de chargement et de repli** (`predict_service.py::_load()`),
+déclenchée une seule fois, au premier appel à `run_prediction()` :
+
+```mermaid
+flowchart TD
+    P["run_prediction(mesures)"] -->|"_model is None"| L["_load()"]
+    L --> M{"MLFLOW_URI\ncommence par 'models:/' ?"}
+    M -- non --> LF1["_load_local(URI)\n(fichier local direct)"]
+    M -- oui --> TRY["mlflow.xgboost.load_model(URI)"]
+    TRY -- succès --> OK["_model_version = URI\n(ex. models:/WaterQualityXGBoost/1)"]
+    TRY -- exception --> WARN["log.warning('MLflow indisponible')"]
+    WARN --> FB{"model_artifacts/xgboost_model.json\nexiste ?"}
+    FB -- oui --> LF2["_load_local(fallback)\n_model_version = 'local:xgboost_model.json'"]
+    FB -- non --> ERR["RuntimeError\n(aucun modèle disponible)"]
+    OK --> RESP["Chaque réponse /predict\ninclut model_version"]
+    LF1 --> RESP
+    LF2 --> RESP
+```
+
+Ce repli a été vérifié réellement, pas seulement lu dans le code : en
+coupant le backend MLflow (`MLFLOW_TRACKING_URI` invalide), le service
+bascule bien sur `model_artifacts/xgboost_model.json` et
+`model_version` passe de `models:/WaterQualityXGBoost/1` à
+`local:xgboost_model.json` dans la réponse — la traçabilité reste
+correcte même en mode dégradé.
+
+**Registre MLflow réel, tel que consulté cette session** — 3 versions
+enregistrées de `WaterQualityXGBoost`, la version 3 aliasée `champion`
+(alias utilisé manuellement pour l'instant, voir limite ci-dessous) :
+
+![Registre de modèles MLflow — WaterQualityXGBoost, 3 versions enregistrées](assets/e3_mlflow_registry.png)
+
 - **Limite connue** : pas de dashboard dédié au monitorage de modèle
   (type Dash/Streamlit) au-delà de l'UI MLflow elle-même — suffisant pour
   ce projet, documenté comme limite plutôt que comme fonctionnalité.
+  Autre limite, partagée avec C13 : le registre ci-dessus est local à
+  cette machine de développement (gitignored) — un runner CI repart d'un
+  registre vide, voir C13.
 
 ---
 
@@ -104,20 +200,38 @@ REAC le signale lui-même).
   synthétiques, hyperparamètres réduits, MLflow mocké.
 - `tests/test_unitaires.py` : validation des features, scaling, prédiction.
 
-**Couverture de tests, mesurée honnêtement** : la commande CI
-(`pytest --cov=api`) rapporte 97 %, mais ce chiffre mesure uniquement les
-fichiers de ré-export `api/` (quelques lignes chacun, voir
-[[architecture]] pour le détail de ce découpage racine/`api/`), pas la
-logique réelle. En pointant la couverture sur les fichiers qui contiennent
-vraiment le code (`db.py`, `routes.py`, `auth.py`, `predict_service.py`,
-`ocr_service.py`), le chiffre réel est **77 %** — `db.py` (97 %) et
-`routes.py` (85 %) sont bien couverts, mais `ocr_service.py` ne l'est qu'à
-**21 %** : les fonctions qui font de vrais appels réseau
-(`_ocr_space`, `_claude_vision_extract`) ne sont volontairement pas
-exercées par la suite (aucun appel réseau réel en CI, voir C10). Ce
-chiffre de 77 % est plus honnête que le 97 % actuellement affiché par la
-CI — corriger le flag `--cov` est une amélioration identifiée pendant la
-rédaction de ce rapport, pas encore appliquée.
+**Couverture de tests, mesurée honnêtement** : la commande CI mesurait
+initialement `pytest --cov=api`, qui ne couvre que les fichiers de
+ré-export `api/` (quelques lignes chacun, voir [[architecture]] pour le
+détail de ce découpage racine/`api/`), pas la logique réelle — ce
+flag a été corrigé depuis (`.github/workflows/ci.yml:46-48`) pour
+pointer sur les 5 modules qui contiennent vraiment le code. Relevé
+directement en local avec la commande exacte de la CI, à la date de ce
+rapport :
+
+| Module | Instructions | Couverture | Non couvert |
+|---|---|---|---|
+| `db.py` | 125 | **97 %** | 4 lignes (bloc de repli rarement atteint) |
+| `routes.py` | 427 | **88 %** | principalement des branches d'erreur peu probables |
+| `auth.py` | 126 | **83 %** | quelques chemins d'erreur d'auth |
+| `predict_service.py` | 57 | **54 %** | `_load()`/`_load_local()` — le chemin MLflow réel n'est pas exercé en CI (modèle mocké, voir C9) |
+| `ocr_service.py` | 96 | **21 %** | `_ocr_space`/`_claude_vision_extract` — aucun appel réseau réel en CI (voir C10) |
+| **Total pondéré** | **831** | **78 %** | |
+
+Les deux modules les moins couverts (`predict_service.py`,
+`ocr_service.py`) le sont par choix assumé, pas par oubli : ce sont
+précisément les points d'intégration avec des services externes
+(MLflow, OCR.space, Claude Vision) qu'on ne veut pas appeler réellement
+depuis une CI publique — testés via des mocks ciblés
+(`tests/test_e2e.py`, `tests/test_unitaires.py`) plutôt que masqués.
+
+**Asymétrie assumée avec le gate du modèle (C13)** : `ci.yml` mesure,
+affiche et publie la couverture (`--cov-report=term-missing`,
+`--cov-report=xml`) mais ne passe jamais `--cov-fail-under` — un build ne
+peut donc pas échouer sur ce critère seul. À contraster avec
+`model-ci.yml`, qui gate numériquement le modèle (`--min-roc-auc 0.82
+--min-f1 0.65`, voir C13) : la couverture de code est un indicateur
+suivi, pas (encore) un seuil bloquant.
 
 ---
 
@@ -126,16 +240,40 @@ rédaction de ce rapport, pas encore appliquée.
 `.github/workflows/model-ci.yml`, séparé de la CI applicative
 (déclencheur différent : push sur `water_potability.csv`,
 `scripts/train_model.py` ou `requirements.txt`, ou déclenchement manuel).
-Étapes : validation des données (réutilise
-`tests/test_unitaires.py::TestDataset`, pas de duplication) →
-entraînement → gate qualité → publication des artefacts comme artefact
-GitHub Actions. L'entraînement du modèle ne déclenche pas automatiquement
-un déploiement de celui-ci — un choix assumé, pas un oubli.
+Détail complet de chaque étape dans [[mlops_pipeline]] ; ce qui suit se
+concentre sur ce que C13 demande spécifiquement : la chaîne automatisée
+et sa preuve d'exécution réelle.
+
+```mermaid
+graph LR
+    A["water_potability.csv"] --> B["Validation<br/>(pytest TestDataset)"]
+    B --> C["Nettoyage<br/>clean_data()"]
+    C --> D["Split + RobustScaler"]
+    D --> E["SMOTE + XGBoost + CV"]
+    E --> F{"Gate qualité<br/>ROC-AUC / F1"}
+    F -- "échec" --> X["sys.exit(1)<br/>rien n'est enregistré"]
+    F -- "succès" --> G["model_artifacts/*<br/>(artefact GitHub Actions)"]
+    F -- "succès" --> H["MLflow Registry<br/>WaterQualityXGBoost"]
+```
+
+L'entraînement du modèle ne déclenche pas automatiquement un déploiement
+de celui-ci — un choix assumé, pas un oubli : le job `deploy` de la CI
+applicative (`ci.yml`) et le registre MLflow sont deux mécanismes
+séparés, cohérent avec la limite déjà documentée dans
+[[mlops_pipeline]] sur l'absence de registre MLflow persistant en CI.
 
 **Pipeline exécuté en conditions réelles** (pas seulement en test) :
-Accuracy 0.7912, F1 0.7329, ROC-AUC 0.8744 — cohérent avec la référence
-historique du modèle actuellement déployé (ROC-AUC ≈ 0.8765). Gate
-configuré à ROC-AUC ≥ 0.82 et F1 ≥ 0.65.
+
+| Métrique | Valeur obtenue | Référence historique | Seuil du gate |
+|---|---|---|---|
+| Accuracy | 0.7912 | — | — (informative) |
+| F1 | 0.7329 | ≈ 0.73 | ≥ 0.65 |
+| ROC-AUC | 0.8744 | ≈ 0.8765 | ≥ 0.82 |
+
+Cohérent avec le modèle actuellement déployé — l'écart entre la
+référence historique et le run réel (0.8744 vs 0.8765) est de l'ordre de
+la variance normale d'un ré-entraînement (SMOTE et le split
+train/validation sont stochastiques), pas une régression.
 
 **Vu tourner en vert pour de vrai** : `model-ci.yml` s'est déclenché tout
 seul (modification de `requirements.txt`) lors du push qui a aussi
