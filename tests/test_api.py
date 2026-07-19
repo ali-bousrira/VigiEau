@@ -334,20 +334,24 @@ class TestPredictAutonome:
                       headers=client_header)
         assert r.status_code == 404
 
-    def test_predict_id_autre_client_refuse(self, http):
-        db = SessionLocal()
-        from api.models.db import Client as C
-        import secrets as s
-        c2 = C(id_client="PRED-OTHER", denomination="Autre", adresse="X", actif=True)
-        c2.set_api_key(s.token_urlsafe(16))
-        db.add(c2)
-        db.commit()
-        db.close()
+    def test_predict_id_autre_client_refuse(self, http, client_header):
+        r_ingest = http.post("/ingest/manual", json=VALID_MESURES, headers=client_header)
+        prev_id  = r_ingest.get_json()["prelevement_id"]
+
+        r_create = http.post("/admin/clients",
+                              json={"id_client": "PRED-OTHER", "denomination": "Autre",
+                                    "adresse": "X", "rgpd_consent": True},
+                              headers=BOB_HEADER)
+        assert r_create.status_code == 201, r_create.get_json()
+        other_id = r_create.get_json()["id"]
+        r_key    = http.post(f"/admin/clients/{other_id}/apikey", headers=BOB_HEADER)
+        assert r_key.status_code == 201
+        other_header = {"X-API-Key": r_key.get_json()["api_key"]}
 
         r = http.post("/predict",
-                      json={"prelevement_id": "00000000-0000-0000-0000-000000000000"},
-                      headers={"X-API-Key": s.token_urlsafe(16)})
-        assert r.status_code == 401
+                      json={"prelevement_id": prev_id},
+                      headers=other_header)
+        assert r.status_code == 403
 
     def test_predict_feature_manquante(self, http, client_header):
         bad = {k: v for k, v in VALID_MESURES.items() if k != "ph"}

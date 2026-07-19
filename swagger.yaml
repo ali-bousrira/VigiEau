@@ -48,6 +48,8 @@ tags:
     description: Routes accessibles avec une clé API client
   - name: Ingestion
     description: Dépôt de prélèvements (manuel ou OCR)
+  - name: Prediction
+    description: Exposition du modèle de classification (sans persistance)
   - name: Admin
     description: Gestion des comptes clients (tout expert)
   - name: Analyste
@@ -266,6 +268,43 @@ paths:
           $ref: "#/responses/BadRequest"
         401:
           $ref: "#/responses/Unauthorized"
+
+  /predict:
+    post:
+      tags: [Prediction]
+      summary: Prédire la potabilité — sans créer de prélèvement
+      description: |
+        Endpoint de consultation/test : ne persiste rien, à distinguer de
+        `/ingest/manual` et `/ingest/ocr-and-predict` qui, eux, créent le
+        prélèvement et sa prédiction.
+
+        Deux modes d'appel, mutuellement exclusifs :
+        - `mesures` : les 9 features brutes.
+        - `prelevement_id` : ID d'un prélèvement déjà déposé par ce client
+          (les mesures sont relues depuis la base).
+      security:
+        - ApiKeyHeader: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: "#/definitions/PredictRequest"
+      responses:
+        200:
+          description: Prédiction calculée
+          schema:
+            $ref: "#/definitions/PredictResponse"
+        400:
+          description: Mesures manquantes ou non numériques (voir le message d'erreur)
+        401:
+          $ref: "#/responses/Unauthorized"
+        403:
+          description: Le prélèvement référencé par prelevement_id appartient à un autre client
+        404:
+          description: prelevement_id introuvable
+        422:
+          description: Le prélèvement référencé n'a pas de mesures associées
 
   # ── ADMIN ────────────────────────────────────────────────────────────────────
 
@@ -675,6 +714,37 @@ definitions:
       at:
         type: string
         format: date-time
+
+  PredictRequest:
+    type: object
+    description: |
+      Fournir soit `mesures` (mode 1), soit `prelevement_id` (mode 2) — pas les deux.
+    properties:
+      mesures:
+        $ref: "#/definitions/Mesures"
+      prelevement_id:
+        type: string
+        format: uuid
+        example: "550e8400-e29b-41d4-a716-446655440000"
+
+  PredictResponse:
+    type: object
+    properties:
+      potable:
+        type: integer
+        enum: [0, 1]
+      label:
+        type: string
+        enum: ["Potable", "Non potable"]
+      probability:
+        type: number
+        format: float
+        example: 0.78
+      model_version:
+        type: string
+        example: "models:/WaterQualityXGBoost/1"
+      mesures:
+        $ref: "#/definitions/Mesures"
 
   Prelevement:
     type: object
