@@ -14,6 +14,8 @@ services:
       # ── OCR ────────────────────────────────────────────────────
       - OCR_SPACE_API_KEY=${OCR_SPACE_API_KEY:-}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      # ── Experts (obligatoire — voir .env.example) ────────────────
+      - EXPERT_TOKENS=${EXPERT_TOKENS}
       # ── Limites ────────────────────────────────────────────────
       - MAX_UPLOAD_MB=20
       - FLASK_ENV=production

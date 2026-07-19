@@ -17,8 +17,11 @@ COPY . .
 # Répertoire pour artefacts ML
 RUN mkdir -p model_artifacts
 
-# Utilisateur non-root
-RUN useradd -m -u 1000 vigieau && chown -R vigieau /app
+# Utilisateur non-root — /data est un point de montage séparé (volume
+# nommé vigieau_data), doit être préparé et chowné ici pour que le volume
+# nommé hérite de ces permissions à sa création (sinon SQLite ne peut pas
+# ouvrir le fichier de base : "unable to open database file")
+RUN useradd -m -u 1000 vigieau && mkdir -p /data && chown -R vigieau /app /data
 USER vigieau
 
 EXPOSE 8080
