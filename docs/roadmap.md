@@ -25,8 +25,8 @@
 
 ## Optionnel (bonus si le temps le permet)
 
-- [ ] Dashboard Prometheus + Grafana pour les métriques d'exploitation
+- [x] Dashboard Prometheus + Grafana pour les métriques d'exploitation — réalisé (`docker-compose.yml`, `monitoring/`, voir `docs/doc_technique_e5.md` C20)
 - [ ] Interface de filtrage avancé pour l'analyste (filtre par zone géographique)
 - [ ] Replay de prédiction sur un prélèvement existant (comparer versions MLflow)
-- [ ] Script de purge automatique des audit_logs > 12 mois
+- [ ] Script de purge automatique des `audit_logs` et `request_metrics` > 12 mois / 90 jours (voir `GET /me/rgpd` pour les durées recommandées déjà documentées)
 - [ ] CD automatique (déploiement sur push `main`) — le job `deploy` dans `ci.yml` est ébauché mais nécessite les secrets `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`

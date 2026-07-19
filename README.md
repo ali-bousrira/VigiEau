@@ -229,7 +229,7 @@ Le dossier `samples/` contient deux fiches anonymisées :
 - Pas de rate limiting (à ajouter au niveau du reverse proxy)
 - Pas de CORS configuré (nécessaire si frontend séparé)
 - La clé API est unique par client (pas de rotation multiple simultanée)
-- Prometheus/Grafana non intégrés (métriques accessibles via `/exploitation/metrics`)
+- Prometheus/Grafana intégrés (`docker-compose.yml`, services `prometheus`/`grafana`, alertes seuils dans `monitoring/alert_rules.yml`) en complément des métriques maison (`/exploitation/metrics`) — voir `docs/doc_technique_e5.md` C20. Vérifiés de bout en bout via `docker compose up` (alerte `TauxErreurEleve` déclenchée pour de vrai) ; sans canal de notification configuré (email/Slack) pour les alertes.
 - Authentification expert par token statique (pas de rotation automatique)
 - **SQLite en développement comme en production Docker**, bien que
   `DATABASE_URL` accepte nativement PostgreSQL (`postgresql://user:pass@host:5432/db`,

@@ -9,6 +9,8 @@ pour tester le pipeline OCR de la plateforme VigiEau.
 |---|---|---|
 | `fiche_labo_anonymisee.txt` | Texte brut | Soumission directe à `POST /ingest/ocr` ou `POST /ingest/ocr-and-predict` |
 | `exemple_extraction_ocr.json` | JSON | Résultat OCR attendu après traitement de la fiche ci-dessus |
+| `fiche_labo_exemple_1.txt` | Texte brut | Fiche complète (9 mesures) → `prediction_possible=true` |
+| `fiche_labo_exemple_2_partiel.txt` | Texte brut | Fiche partielle (pH/Turbidité/Conductivité seulement) → `prediction_possible=false`, cas couvert par `tests/test_e2e.py::test_e2e_ocr_mesures_partielles_prediction_impossible` |
 
 ## Comment tester
 

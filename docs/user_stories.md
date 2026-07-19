@@ -169,9 +169,12 @@ sera ajoutée.
 - `GET /exploitation/audit` retourne les entrées `audit_logs` paginées
 - Filtrable par `actor_type`, `action`, `date_debut`, `date_fin`
 - Les IPs sont pseudonymisées (dernier octet masqué)
-- *Accessibilité* : idem US-08, pas de vue dédiée à ce jour — dette
-  technique connue (voir `RAPPORT_CONFORMITE.md`), à traiter avec les
-  mêmes règles RGAA que le reste de l'interface le jour où elle sera ajoutée
+- *Accessibilité (RGAA, onglet "Audit")* : contrairement à US-08, cette
+  vue a désormais une interface dédiée (onglet "Audit", visible pour le
+  rôle `exploit` uniquement) — mêmes règles RGAA que le reste de
+  l'interface : `role="tablist"`/`tab`/`tabpanel` sur la navigation par
+  onglets (US-06), filtres (acteur, action, dates) avec `<label for>`
+  lié, couverte par `tests/test_accessibility.py`
 
 **Route :** `GET /exploitation/audit`
 

@@ -111,7 +111,7 @@ fallback (potentiellement moins précis sur certains formats) :
 }
 ```
 
-Aujourd'hui, la réponse réelle (`routes.py:504-507,559-565`) est
+Aujourd'hui, la réponse réelle (`routes.py:506-509,561-567`) est
 `{prelevement_id, ocr, prediction, prediction_possible}` — sans indication
 du provider utilisé. À faire : `extract_from_document()` devrait retourner
 le provider utilisé (ou le déduire d'un `warning` existant) pour que

@@ -68,6 +68,17 @@ portée par la seule couleur.
 │ /exploitation/* via l'onglet API Explorer (pas de vue dédiée —      │
 │ dette technique documentée, voir RAPPORT_CONFORMITE.md)             │
 └───────────────────────────────┬────────────────────────────────────┘
+```
+
+**Écart entre ce wireframe et l'implémentation réelle** (noté a posteriori,
+sans retoucher le schéma ci-dessus qui reflète l'intention avant
+codage) : `/exploitation/audit` a finalement reçu son propre onglet
+"Audit" dédié (rôle `exploit`), pas seulement l'accordéon API Explorer
+décrit ici — voir capture dans `docs/doc_technique_e5.md` C20.
+`/exploitation/metrics`, lui, reste conforme à ce wireframe (pas de vue
+dédiée, accès via l'onglet API générique).
+
+```
                                  ▼
 ┌─────────────── Onglet API (role="tabpanel") ─────────────────────────┐
 │ Liste des endpoints (accordéon) :                                     │
