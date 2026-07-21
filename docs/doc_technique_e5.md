@@ -4,10 +4,6 @@ epreuve: E5
 competences: [C20, C21]
 ---
 
-> Structure organisée par compétence (C20, C21), conforme à la consigne
-> du REAC. Voir [[rgpd]] pour le détail des mesures de protection des
-> données et [[architecture]] pour la vue d'ensemble technique.
-
 # Documentation technique — Monitorage et incident (E5)
 
 **Dépôt du projet (public)** : https://github.com/ali-bousrira/VigiEau
@@ -16,8 +12,9 @@ competences: [C20, C21]
 
 Donner à l'équipe d'exploitation une visibilité sur la santé de la
 plateforme (volume, latence, erreurs) et une traçabilité complète des
-accès aux données (exigence RGPD), et démontrer la capacité à détecter,
-diagnostiquer et corriger un incident réel via ce même monitorage.
+accès aux données (exigence RGPD, détaillée dans [[rgpd]]), et démontrer
+la capacité à détecter, diagnostiquer et corriger un incident réel via ce
+même monitorage. Voir [[architecture]] pour la vue d'ensemble technique.
 
 ---
 

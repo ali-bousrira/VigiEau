@@ -5,9 +5,6 @@ bloc: 2
 competences: [C9, C10, C11, C12, C13]
 ---
 
-> Structure organisée **par compétence** (C9 à C13), conforme à la
-> consigne du REAC.
-
 # Rapport professionnel — E3 : Modèle en production
 
 **Dépôt du projet (public)** : https://github.com/ali-bousrira/VigiEau

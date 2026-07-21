@@ -5,11 +5,6 @@ bloc: 3
 competences: [C14, C15, C16, C17, C18, C19]
 ---
 
-> Structure organisée **par compétence** (C14 à C19), conforme à la
-> consigne du REAC — E4 est le versant gestion de projet du chef-d'œuvre,
-> [[rapport_e3]] en est le versant dev/ML (même code, même dépôt, deux
-> angles de compétences distincts).
-
 # Rapport professionnel — E4 : Application
 
 **Dépôt du projet (public)** : https://github.com/ali-bousrira/VigiEau
@@ -21,7 +16,9 @@ marcher dessus : un client final qui dépose des mesures et consulte ses
 propres résultats, un analyste qualité qui a une vue globale, un
 responsable d'exploitation qui supervise l'infrastructure — tous via une
 **seule interface web**, cohérente avec l'API unique décrite dans
-[[architecture]].
+[[architecture]]. Ce rapport est le versant gestion de projet du
+chef-d'œuvre ; [[rapport_e3]] en est le versant dev/ML (même code, même
+dépôt, deux angles de compétences distincts).
 
 ---
 

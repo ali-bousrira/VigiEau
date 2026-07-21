@@ -4,10 +4,6 @@ epreuve: E2
 competences: [C6, C7, C8]
 ---
 
-> Structure organisée par compétence (C6, C7, C8), conforme à la consigne
-> du REAC. Voir [[architecture]] pour le diagramme de séquence complet du
-> pipeline OCR → prédiction.
-
 # Documentation technique — Service OCR (E2)
 
 **Dépôt du projet (public)** : https://github.com/ali-bousrira/VigiEau
@@ -18,7 +14,9 @@ Extraire automatiquement les 9 mesures physico-chimiques (`ph`,
 `Hardness`, `Solids`, `Chloramines`, `Sulfate`, `Conductivity`,
 `Organic_carbon`, `Trihalomethanes`, `Turbidity`) et les métadonnées
 (date, lieu, observations) d'une fiche de laboratoire déposée en image ou
-PDF, pour alimenter le pipeline de prédiction sans ressaisie manuelle.
+PDF, pour alimenter le pipeline de prédiction sans ressaisie manuelle —
+voir [[architecture]] pour le diagramme de séquence complet du pipeline
+OCR → prédiction.
 
 **Besoin client** (fictif, ancré sur le projet) : les collectivités
 clientes reçoivent leurs analyses d'un laboratoire externe sous forme de

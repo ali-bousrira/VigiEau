@@ -5,11 +5,6 @@ bloc: 1
 competences: [C1, C2, C3, C4, C5]
 ---
 
-> Structure organisée **par compétence** (C1 à C5), conformément à la
-> consigne du REAC ("faites correspondre votre plan à celui du REAC.
-> Découpez par compétence, sans chercher forcément à raconter une
-> histoire") plutôt qu'en contexte/démarche/résultats.
-
 # Rapport professionnel — E1 : Collecte, stockage et mise à disposition des données
 
 **Dépôt du projet (public)** : https://github.com/ali-bousrira/VigiEau
